@@ -97,9 +97,9 @@ body {
   vertical-align: middle;
 }
 
-/* Player Column Headers */
+/* Player Column Headers (Taller header for names + bunkós under names) */
 .score-table thead tr {
-  height: 52px;
+  height: 60px;
   background-color: #f8fafc;
   border-bottom: 2px solid #0f172a;
 }
@@ -112,10 +112,12 @@ body {
 .player-header-inner {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
+  gap: 2px;
 }
 
 .player-name-input {
@@ -127,7 +129,7 @@ body {
   background: transparent;
   border: 1px dashed transparent;
   border-radius: 4px;
-  width: calc(100% - 24px);
+  width: 100%;
   padding: 2px;
   outline: none;
   transition: all 0.15s;
@@ -139,19 +141,18 @@ body {
   border-color: #94a3b8;
 }
 
-/* Touch-friendly Player Delete X Button (Only shown BEFORE game starts) */
+/* Touch-friendly Player Delete X Button (Top Right, only before game starts) */
 .remove-player-btn {
   position: absolute;
-  right: 3px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
+  right: 2px;
+  top: 2px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   border: none;
   background-color: rgba(239, 68, 68, 0.12);
   color: #ef4444;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: bold;
   cursor: pointer;
   opacity: 0.6;
@@ -170,25 +171,14 @@ body {
   color: #ffffff;
 }
 
-/* Static Pure Visual Bunkó Badges on right side */
+/* Bunkó Badges displayed directly UNDER player name */
 .player-badges-row {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2px;
+  min-height: 16px;
   pointer-events: none;
-  z-index: 5;
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.player-badges-row.with-delete-btn {
-  right: 30px;
 }
 
 .bunko-icon {
@@ -252,7 +242,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Footer Actions (Left: Gear + Add User Icon, Right: Bunkó, Új kör 🔄, Új játék ➕)
+   Footer Actions
    -------------------------------------------------------------------------- */
 .app-footer {
   height: 60px;
@@ -421,7 +411,7 @@ input:checked + .slider:before {
   transform: translateX(20px);
 }
 
-/* Bunkó Selectable List */
+/* Bunkó Single-Select List */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -484,7 +474,7 @@ input:checked + .slider:before {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .modal-player-selectable {
@@ -597,7 +587,6 @@ input:checked + .slider:before {
   }
   .player-name-input {
     font-size: 1rem;
-    width: calc(100% - 20px);
   }
   .score-input,
   .total-cell {

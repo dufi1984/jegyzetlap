@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v13';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v14';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialRowCount = calculateScreenRoundsCount();
 
   let state = loadState() || {
-    players: ['Név 1', 'Név 2', 'Név 3', 'Név 4'],
+    players: ['Név1', 'Név2', 'Név3', 'Név4'], // Default names without space
     playerBunkos: [[], [], [], []],
     gameType: 'snapszer', // 'snapszer' or 'general'
     showSum: false,
@@ -58,7 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const bunkoModalList = document.getElementById('bunko-modal-list');
   const confirmBunkoBtn = document.getElementById('confirm-bunko-btn');
 
-  let selectedPlayerIndices = new Set();
+  // Single-select index for Bunkó assignment
+  let selectedPlayerIndex = null;
 
   // SVG Generators for Bunkó icons
   const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7.5" fill="#1e293b"/></svg>`;
@@ -145,6 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Render Player Header Row
+   * Bunkó badges displayed directly UNDER player name
+   * Focus selects all text for instant touch overwriting
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
@@ -160,23 +163,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const innerDiv = document.createElement('div');
       innerDiv.className = 'player-header-inner';
 
-      // Name Input
+      // Name Input with auto-select on focus
       const input = document.createElement('input');
       input.type = 'text';
       input.className = 'player-name-input';
       input.value = playerName;
-      input.placeholder = `Játékos ${index + 1}`;
+      input.placeholder = `Név${index + 1}`;
       input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
+      input.addEventListener('focus', () => input.select()); // Auto-select text on tap!
       innerDiv.appendChild(input);
 
-      // Bunkó Badges Row (Static visual badges)
+      // Bunkó Badges Row (displayed directly UNDER player name)
       const bunkos = state.playerBunkos[index] || [];
       if (bunkos.length > 0 && state.gameType === 'snapszer') {
         const badgesRow = document.createElement('div');
         badgesRow.className = 'player-badges-row';
-        if (canDelete) {
-          badgesRow.classList.add('with-delete-btn');
-        }
 
         bunkos.forEach(type => {
           const span = document.createElement('span');
@@ -187,12 +188,12 @@ document.addEventListener('DOMContentLoaded', () => {
         innerDiv.appendChild(badgesRow);
       }
 
-      // Delete player X button (ONLY shown before game starts)
+      // Delete player X button (Top-Right, ONLY shown before game starts)
       if (canDelete) {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-player-btn';
         removeBtn.innerHTML = '✕';
-        removeBtn.title = 'Játékos törlése (csak a pontbeírás előtt)';
+        removeBtn.title = 'Játékos törlése';
         removeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           removePlayer(index);
@@ -250,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
       input.dataset.roundIndex = roundIdx;
       input.dataset.playerIndex = playerIdx;
       input.setAttribute('autocomplete', 'off');
+      input.addEventListener('focus', () => input.select());
 
       td.appendChild(input);
       tr.appendChild(td);
@@ -345,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function addPlayer() {
-    const newPlayerName = `Név ${state.players.length + 1}`;
+    const newPlayerName = `Név${state.players.length + 1}`;
     state.players.push(newPlayerName);
     state.playerBunkos.push([]);
     state.rounds.forEach(round => round.push(''));
@@ -363,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updatePlayerName(playerIdx, newName) {
-    state.players[playerIdx] = newName.trim() || `Játékos ${playerIdx + 1}`;
+    state.players[playerIdx] = newName.trim() || `Név${playerIdx + 1}`;
     saveState();
   }
 
@@ -380,10 +382,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Bunkó Modal Management
+   * Bunkó Single-Select Modal Management
    */
   function openBunkoModal() {
-    selectedPlayerIndices.clear();
+    selectedPlayerIndex = null;
     renderBunkoSelectableList();
     bunkoModal.classList.remove('is-hidden');
   }
@@ -398,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.players.forEach((name, playerIdx) => {
       const row = document.createElement('div');
       row.className = 'modal-player-selectable';
-      if (selectedPlayerIndices.has(playerIdx)) {
+      if (selectedPlayerIndex === playerIdx) {
         row.classList.add('is-selected');
       }
 
@@ -412,14 +414,14 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(nameSpan);
       row.appendChild(checkIcon);
 
+      // Single select toggle logic
       row.addEventListener('click', () => {
-        if (selectedPlayerIndices.has(playerIdx)) {
-          selectedPlayerIndices.delete(playerIdx);
-          row.classList.remove('is-selected');
+        if (selectedPlayerIndex === playerIdx) {
+          selectedPlayerIndex = null;
         } else {
-          selectedPlayerIndices.add(playerIdx);
-          row.classList.add('is-selected');
+          selectedPlayerIndex = playerIdx;
         }
+        renderBunkoSelectableList();
       });
 
       bunkoModalList.appendChild(row);
@@ -427,21 +429,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function confirmBunkoSelection() {
-    if (selectedPlayerIndices.size > 0) {
+    if (selectedPlayerIndex !== null) {
       const totals = calculateTotals();
 
-      selectedPlayerIndices.forEach(playerIdx => {
-        if (!state.playerBunkos[playerIdx]) {
-          state.playerBunkos[playerIdx] = [];
-        }
-        
-        const totalScore = totals[playerIdx];
-        if (totalScore === 0) {
-          state.playerBunkos[playerIdx].push('szoros');
-        } else {
-          state.playerBunkos[playerIdx].push('sima');
-        }
-      });
+      if (!state.playerBunkos[selectedPlayerIndex]) {
+        state.playerBunkos[selectedPlayerIndex] = [];
+      }
+      
+      const totalScore = totals[selectedPlayerIndex];
+      if (totalScore === 0) {
+        state.playerBunkos[selectedPlayerIndex].push('szoros');
+      } else {
+        state.playerBunkos[selectedPlayerIndex].push('sima');
+      }
 
       saveState();
       renderHeaders();
@@ -452,8 +452,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Start New Round / Új kör
-   * Instant reset of score inputs without confirmation dialog.
-   * PRESERVES player bunkós and player names!
    */
   function startNewSession() {
     const rowCount = calculateScreenRoundsCount();
@@ -463,9 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Start New Game / Új játék
-   * Instant reset of score inputs AND bunkós without confirmation dialog.
-   * PRESERVES player names!
+   * Start New Game / Új játék (Clears scores AND bunkós, PRESERVES player names)
    */
   function resetTableKeepNames() {
     const rowCount = calculateScreenRoundsCount();
