@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v28';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v29';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playerBunkos: [[], [], [], []],
     gameType: 'snapszer',
     showSum: false,
+    darkMode: false,
     lockedRowsCount: 0,
     separatorRowIndices: [],
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.playerBunkos = state.players.map((_, i) => state.playerBunkos?.[i] || []);
   }
   if (!state.gameType) state.gameType = 'snapszer';
+  if (state.darkMode === undefined) state.darkMode = false;
   if (state.lockedRowsCount === undefined) state.lockedRowsCount = 0;
   if (!state.separatorRowIndices) state.separatorRowIndices = [];
 
@@ -53,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Settings Popover Elements
   const settingsBtn = document.getElementById('settings-btn');
   const settingsPopover = document.getElementById('settings-popover');
+  const toggleDarkCheckbox = document.getElementById('toggle-dark-checkbox');
   const toggleSumCheckbox = document.getElementById('toggle-sum-checkbox');
   const gameTypeSelect = document.getElementById('game-type-select');
 
@@ -65,9 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let selectedPlayerIndex = null;
 
-  // SVG Generators for Bunkó icons
-  const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7" fill="#1e293b"/></svg>`;
-  const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="6.5" fill="#1e293b"/><path d="M12 1.5v3.5 M12 19v3.5 M1.5 12h3.5 M19 12h3.5 M4.6 4.6l2.5 2.5 M16.9 16.9l2.5 2.5 M4.6 19.4l2.5-2.5 M16.9 7.1l2.5-2.5" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+  // SVG Generators for Bunkó icons (Using currentColor for instant theme matching)
+  const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>`;
+  const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="6.5" fill="currentColor"/><path d="M12 1.5v3.5 M12 19v3.5 M1.5 12h3.5 M19 12h3.5 M4.6 4.6l2.5 2.5 M16.9 16.9l2.5 2.5 M4.6 19.4l2.5-2.5 M16.9 7.1l2.5-2.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
   function isGameStarted() {
     return state.rounds.some(round => round.some(val => val !== '' && val !== null && val !== undefined));
@@ -79,6 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
       totalPaperContainer.scrollLeft = tableWrapper.scrollLeft;
     });
   }
+
+  // Apply Theme
+  applyTheme();
 
   // Initialize UI
   renderTable();
@@ -104,6 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
       settingsPopover.classList.add('is-hidden');
     }
   });
+
+  if (toggleDarkCheckbox) {
+    toggleDarkCheckbox.addEventListener('change', (e) => {
+      state.darkMode = e.target.checked;
+      saveState();
+      applyTheme();
+    });
+  }
 
   toggleSumCheckbox.addEventListener('change', (e) => {
     state.showSum = e.target.checked;
@@ -136,6 +150,14 @@ document.addEventListener('DOMContentLoaded', () => {
   roundsTbody.addEventListener('keydown', handleCellKeyDown);
   roundsTbody.addEventListener('input', handleCellInput);
 
+  function applyTheme() {
+    if (state.darkMode) {
+      document.body.classList.add('dark-theme');
+    } else {
+      document.body.classList.remove('dark-theme');
+    }
+  }
+
   /**
    * Render complete table
    */
@@ -148,6 +170,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateSettingsUI() {
+    if (toggleDarkCheckbox) {
+      toggleDarkCheckbox.checked = !!state.darkMode;
+    }
     toggleSumCheckbox.checked = state.showSum;
     gameTypeSelect.value = state.gameType || 'snapszer';
   }

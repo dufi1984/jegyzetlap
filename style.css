@@ -1,20 +1,85 @@
 /* ==========================================================================
-   Kártyás Jegyzetlap - Clean White Paper Score Pad Stylesheet
+   Kártyás Jegyzetlap - Themeable Score Pad Stylesheet (Light & WCAG AA Dark)
    ========================================================================== */
 
 :root {
   --outer-bg: #eceff4;
   --paper-bg: #ffffff;
+  --paper-border: #e2e8f0;
   --paper-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  --header-bg: #f8fafc;
+  --header-border: #0f172a;
   --line-blue: rgba(70, 110, 180, 0.22);
-  --text-dark: #1e293b;
+  --separator-line: #0f172a;
+  --text-main: #0f172a;
+  --text-locked: #475569;
+  --text-muted: #64748b;
+  --score-focus-bg: #ffffff;
+  --score-focus-border: #3b82f6;
+  --score-focus-shadow: rgba(59, 130, 246, 0.2);
   
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --bunko-color: #1e293b;
+  --bunko-szoros-color: #1e293b;
+
+  --total-bar-bg: #f1f5f9;
+  --total-bar-border: #0f172a;
+  --total-bar-shadow: 0 -4px 16px rgba(0, 0, 0, 0.12);
 
   --footer-bg: #1e293b;
   --footer-text: #cbd5e1;
-  
+  --footer-btn-bg: #0f172a;
+  --footer-btn-border: #475569;
+
+  --popover-bg: #1e293b;
+  --popover-border: #334155;
+  --popover-text: #f8fafc;
+
+  --modal-card-bg: #ffffff;
+  --modal-item-bg: #f8fafc;
+  --modal-item-border: #e2e8f0;
+
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --row-height: 46px;
+}
+
+/* --------------------------------------------------------------------------
+   OLED Eye-Friendly Dark Theme (WCAG AA / AAA Compliant Contrast)
+   -------------------------------------------------------------------------- */
+body.dark-theme {
+  --outer-bg: #090d16;
+  --paper-bg: #111827;
+  --paper-border: #1f293d;
+  --paper-shadow: 0 4px 25px rgba(0, 0, 0, 0.45);
+  --header-bg: #0f172a;
+  --header-border: #38bdf8;
+  --line-blue: rgba(148, 163, 184, 0.16);
+  --separator-line: #38bdf8;
+  --text-main: #f8fafc;
+  --text-locked: #94a3b8;
+  --text-muted: #94a3b8;
+  --score-focus-bg: #1e293b;
+  --score-focus-border: #38bdf8;
+  --score-focus-shadow: rgba(56, 189, 248, 0.25);
+
+  --bunko-color: #38bdf8;
+  --bunko-szoros-color: #38bdf8;
+
+  --total-bar-bg: #1e293b;
+  --total-bar-border: #38bdf8;
+  --total-bar-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+
+  --footer-bg: #0b1120;
+  --footer-text: #e2e8f0;
+  --footer-btn-bg: #1e293b;
+  --footer-btn-border: #334155;
+
+  --popover-bg: #0f172a;
+  --popover-border: #334155;
+  --popover-text: #f8fafc;
+
+  --modal-card-bg: #111827;
+  --modal-item-bg: #1e293b;
+  --modal-item-border: #334155;
 }
 
 * {
@@ -31,10 +96,11 @@ html, body {
 body {
   font-family: var(--font-sans);
   background-color: var(--outer-bg);
-  color: var(--text-dark);
+  color: var(--text-main);
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 /* --------------------------------------------------------------------------
@@ -62,9 +128,9 @@ body {
   min-height: calc(100vh - 60px - env(safe-area-inset-bottom, 0px));
   box-shadow: var(--paper-shadow);
   overflow: hidden;
-  border-left: 1px solid #e2e8f0;
-  border-right: 1px solid #e2e8f0;
-  transition: padding-bottom 0.2s ease-in-out;
+  border-left: 1px solid var(--paper-border);
+  border-right: 1px solid var(--paper-border);
+  transition: padding-bottom 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
 
 .paper-sheet.has-bottom-sum {
@@ -94,9 +160,9 @@ body {
   border-bottom: 1px solid var(--line-blue);
 }
 
-/* Round Separator Line (Thick dark line drawn after 'Új kör') */
+/* Round Separator Line (Thick line drawn after 'Új kör') */
 .score-table tr.round-separator-row {
-  border-bottom: 3px solid #0f172a !important;
+  border-bottom: 3px solid var(--separator-line) !important;
 }
 
 .score-table th, 
@@ -110,8 +176,8 @@ body {
 /* Player Column Headers */
 .score-table thead tr {
   height: 54px;
-  background-color: #f8fafc;
-  border-bottom: 2px solid #0f172a;
+  background-color: var(--header-bg);
+  border-bottom: 2px solid var(--header-border);
 }
 
 .player-header {
@@ -130,12 +196,12 @@ body {
   gap: 0;
 }
 
-/* Player Name Input (Inter Semi-Bold font, moderate size) */
+/* Player Name Input */
 .player-name-input {
   font-family: var(--font-sans);
   font-weight: 600;
   font-size: 1.05rem;
-  color: #0f172a;
+  color: var(--text-main);
   text-align: center;
   background: transparent;
   border: 1px dashed transparent;
@@ -149,7 +215,7 @@ body {
 
 .player-name-input:focus,
 .player-name-input:hover {
-  background-color: #f1f5f9;
+  background-color: rgba(255, 255, 255, 0.08);
   border-color: #94a3b8;
 }
 
@@ -163,12 +229,12 @@ body {
   height: 22px;
   border-radius: 50%;
   border: none;
-  background-color: rgba(239, 68, 68, 0.12);
+  background-color: rgba(239, 68, 68, 0.15);
   color: #ef4444;
   font-size: 0.8rem;
   font-weight: bold;
   cursor: pointer;
-  opacity: 0.6;
+  opacity: 0.75;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -201,6 +267,15 @@ body {
   display: inline-block;
   vertical-align: middle;
   pointer-events: none;
+  color: var(--bunko-color);
+}
+
+.bunko-icon circle {
+  fill: currentColor;
+}
+
+.bunko-icon path {
+  stroke: currentColor;
 }
 
 /* Score Cells & Inputs */
@@ -212,7 +287,7 @@ body {
   font-size: 1.6rem;
   font-weight: 500;
   text-align: center;
-  color: #0f172a;
+  color: var(--text-main);
   background: transparent;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -223,18 +298,18 @@ body {
 }
 
 .score-input:focus {
-  background-color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  background-color: var(--score-focus-bg);
+  border-color: var(--score-focus-border);
+  box-shadow: 0 0 0 2px var(--score-focus-shadow);
 }
 
 .score-cell:hover .score-input {
-  background-color: rgba(241, 245, 249, 0.6);
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Locked Score Inputs (Previous rounds after 'Új kör') */
 .score-input.is-locked {
-  color: #475569;
+  color: var(--text-locked);
   cursor: not-allowed;
   user-select: none;
 }
@@ -273,11 +348,11 @@ body {
   max-width: 960px;
   margin: 0 auto;
   overflow-x: hidden;
-  background-color: #f1f5f9;
-  border-top: 2px solid #0f172a;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.15);
-  border-left: 1px solid #e2e8f0;
-  border-right: 1px solid #e2e8f0;
+  background-color: var(--total-bar-bg);
+  border-top: 2px solid var(--total-bar-border);
+  box-shadow: var(--total-bar-shadow);
+  border-left: 1px solid var(--paper-border);
+  border-right: 1px solid var(--paper-border);
   pointer-events: auto;
 }
 
@@ -296,7 +371,7 @@ body {
 .total-cell {
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
-  color: #0f172a;
+  color: var(--text-main);
   font-size: 1.65rem;
   font-weight: 900;
   text-align: center;
@@ -334,8 +409,8 @@ body {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--footer-text);
-  background-color: #0f172a;
-  border: 1px solid #475569;
+  background-color: var(--footer-btn-bg);
+  border: 1px solid var(--footer-btn-border);
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
@@ -387,12 +462,12 @@ body {
   position: fixed;
   bottom: calc(68px + env(safe-area-inset-bottom, 0px));
   left: max(14px, env(safe-area-inset-left));
-  width: 260px;
-  background-color: #1e293b;
-  color: #ffffff;
+  width: 265px;
+  background-color: var(--popover-bg);
+  color: var(--popover-text);
   border-radius: 12px;
-  border: 1px solid #334155;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--popover-border);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
   padding: 14px 16px;
   z-index: 250;
   font-family: var(--font-sans);
@@ -416,7 +491,7 @@ body {
 .popover-label {
   font-size: 0.92rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--popover-text);
 }
 
 .custom-popover-select {
@@ -453,7 +528,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #cbd5e1;
+  background-color: #64748b;
   transition: .2s;
   border-radius: 24px;
 }
@@ -485,7 +560,7 @@ input:checked + .slider:before {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(15, 23, 42, 0.65);
+  background-color: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -499,17 +574,18 @@ input:checked + .slider:before {
 }
 
 .modal-card {
-  background-color: #ffffff;
+  background-color: var(--modal-card-bg);
   border-radius: 14px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
   overflow: hidden;
   font-family: var(--font-sans);
+  border: 1px solid var(--paper-border);
 }
 
 .modal-header {
-  background-color: #1e293b;
+  background-color: var(--footer-bg);
   color: #ffffff;
   padding: 16px 20px;
   display: flex;
@@ -545,8 +621,8 @@ input:checked + .slider:before {
 }
 
 .modal-player-selectable {
-  background-color: #f8fafc;
-  border: 2px solid #e2e8f0;
+  background-color: var(--modal-item-bg);
+  border: 2px solid var(--modal-item-border);
   border-radius: 10px;
   padding: 14px 18px;
   display: flex;
@@ -558,12 +634,11 @@ input:checked + .slider:before {
 }
 
 .modal-player-selectable:hover {
-  border-color: #cbd5e1;
-  background-color: #f1f5f9;
+  border-color: #3b82f6;
 }
 
 .modal-player-selectable.is-selected {
-  background-color: #eff6ff;
+  background-color: rgba(59, 130, 246, 0.15);
   border-color: #3b82f6;
   box-shadow: 0 0 0 1px #3b82f6;
 }
@@ -571,19 +646,19 @@ input:checked + .slider:before {
 .modal-player-name-text {
   font-size: 1.15rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--text-main);
 }
 
 .modal-player-selectable.is-selected .modal-player-name-text {
   font-weight: 700;
-  color: #1d4ed8;
+  color: #38bdf8;
 }
 
 .modal-player-check-icon {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid #cbd5e1;
+  border: 2px solid #64748b;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -605,15 +680,15 @@ input:checked + .slider:before {
 
 .modal-footer {
   padding: 14px 16px;
-  background-color: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background-color: var(--modal-item-bg);
+  border-top: 1px solid var(--paper-border);
   display: flex;
   justify-content: center;
 }
 
 .btn-confirm-bunko {
   width: 100%;
-  background-color: #1e293b;
+  background-color: #3b82f6;
   color: #ffffff;
   border: none;
   border-radius: 8px;
@@ -625,7 +700,7 @@ input:checked + .slider:before {
 }
 
 .btn-confirm-bunko:hover {
-  background-color: #0f172a;
+  background-color: #2563eb;
 }
 
 /* Responsive adjustments */
