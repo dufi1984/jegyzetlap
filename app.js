@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v14';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v15';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const initialRowCount = calculateScreenRoundsCount();
 
   let state = loadState() || {
-    players: ['Név1', 'Név2', 'Név3', 'Név4'], // Default names without space
+    players: ['Név1', 'Név2', 'Név3', 'Név4'],
     playerBunkos: [[], [], [], []],
     gameType: 'snapszer', // 'snapszer' or 'general'
     showSum: false,
@@ -58,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const bunkoModalList = document.getElementById('bunko-modal-list');
   const confirmBunkoBtn = document.getElementById('confirm-bunko-btn');
 
-  // Single-select index for Bunkó assignment
   let selectedPlayerIndex = null;
 
   // SVG Generators for Bunkó icons
@@ -99,11 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
     updateSumVisibility();
   });
 
+  // Game Type Change: Auto-clears table scores & bunkos for a fresh start!
   gameTypeSelect.addEventListener('change', (e) => {
     state.gameType = e.target.value;
+    
+    // Reset table scores and bunkos on game type change
+    const rowCount = calculateScreenRoundsCount();
+    state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
+    state.playerBunkos = state.players.map(() => []);
+
     saveState();
-    updateGameTypeUI();
-    renderHeaders();
+    renderTable();
   });
 
   // Bunkó Modal Listeners
@@ -146,8 +151,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Render Player Header Row
-   * Bunkó badges displayed directly UNDER player name
-   * Focus selects all text for instant touch overwriting
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
@@ -170,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
       input.value = playerName;
       input.placeholder = `Név${index + 1}`;
       input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
-      input.addEventListener('focus', () => input.select()); // Auto-select text on tap!
+      input.addEventListener('focus', () => input.select());
       innerDiv.appendChild(input);
 
       // Bunkó Badges Row (displayed directly UNDER player name)
@@ -188,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         innerDiv.appendChild(badgesRow);
       }
 
-      // Delete player X button (Top-Right, ONLY shown before game starts)
+      // Delete player X button (ONLY shown before game starts)
       if (canDelete) {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-player-btn';
@@ -414,7 +417,6 @@ document.addEventListener('DOMContentLoaded', () => {
       row.appendChild(nameSpan);
       row.appendChild(checkIcon);
 
-      // Single select toggle logic
       row.addEventListener('click', () => {
         if (selectedPlayerIndex === playerIdx) {
           selectedPlayerIndex = null;
@@ -461,7 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Start New Game / Új játék (Clears scores AND bunkós, PRESERVES player names)
+   * Trash Icon Button Action: Reset Table & Bunkós, Keep Player Names!
    */
   function resetTableKeepNames() {
     const rowCount = calculateScreenRoundsCount();
