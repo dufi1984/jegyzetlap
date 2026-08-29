@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v6';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v7';
   const THEME_KEY = 'kartyas_jegyzetlap_theme';
 
   const calculateScreenRoundsCount = () => {
@@ -613,20 +613,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      // 2. If row sum is already 26, fill remaining empty cells with 0
-      if (currentSum === 26 && emptyIndices.length > 0) {
+      // 2. If row sum is already 26 and user is NOT typing empty in current cell, fill other empty cells with 0
+      if (currentSum === 26 && emptyIndices.length > 0 && val !== '') {
         emptyIndices.forEach(pIdx => {
-          state.rounds[roundIdx][pIdx] = '0';
-          const cellInput = roundsTbody.querySelector(
-            `input[data-round-index="${roundIdx}"][data-player-index="${pIdx}"]`
-          );
-          if (cellInput) cellInput.value = '0';
+          if (pIdx !== playerIdx) {
+            state.rounds[roundIdx][pIdx] = '0';
+            const cellInput = roundsTbody.querySelector(
+              `input[data-round-index="${roundIdx}"][data-player-index="${pIdx}"]`
+            );
+            if (cellInput) cellInput.value = '0';
+          }
         });
         emptyIndices.length = 0;
         enteredCount = state.players.length;
       }
-      // 3. If exactly 1 cell remains empty and currentSum <= 26, auto-calculate the 4th cell!
-      else if (emptyIndices.length === 1 && currentSum <= 26 && enteredCount === state.players.length - 1) {
+      // 3. If exactly 1 OTHER cell remains empty (i.e. NOT the one the user is currently editing) and currentSum <= 26
+      else if (emptyIndices.length === 1 && emptyIndices[0] !== playerIdx && currentSum <= 26 && enteredCount === state.players.length - 1) {
         const remainingPlayerIdx = emptyIndices[0];
         const remainingVal = String(26 - currentSum);
         state.rounds[roundIdx][remainingPlayerIdx] = remainingVal;
