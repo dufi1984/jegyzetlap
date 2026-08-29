@@ -10,7 +10,7 @@
   --text-dark: #1e293b;
   
   --font-serif: 'Courier Prime', monospace, Georgia, serif;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --footer-bg: #1e293b;
   --footer-text: #cbd5e1;
@@ -30,7 +30,7 @@ html, body {
 }
 
 body {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   background-color: var(--outer-bg);
   color: var(--text-dark);
   display: flex;
@@ -81,7 +81,8 @@ body {
   border-collapse: collapse;
   table-layout: fixed;
   position: relative;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 
 .score-table tr {
@@ -123,7 +124,7 @@ body {
 .player-name-input {
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   color: #0f172a;
   text-align: center;
   background: transparent;
@@ -192,7 +193,7 @@ body {
   pointer-events: none;
 }
 
-/* Sticky Total Score Row */
+/* Sticky Total Score Row (ONLY the sum is BOLD) */
 .total-tbody {
   position: sticky;
   top: 0;
@@ -210,27 +211,33 @@ body {
 }
 
 .total-cell {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
   color: #0f172a;
-  font-size: 1.45rem;
-  font-weight: 900;
-  padding: 6px 2px;
+  font-size: 1.65rem;
+  font-weight: 900; /* ONLY SUM IS BOLD */
+  padding: 0 2px;
   user-select: none;
   letter-spacing: -0.02em;
+  line-height: var(--row-height);
 }
 
-/* Score Cells & Inputs */
+/* Score Cells & Inputs (Clean, highly legible, regular weight, perfectly centered) */
 .score-input {
   width: 100%;
-  height: 40px;
-  font-family: var(--font-serif);
-  font-size: 1.45rem;
-  font-weight: 700;
+  height: 42px;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.6rem;
+  font-weight: 500; /* Normal regular weight, not chubby */
   text-align: center;
   color: #0f172a;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 4px;
   outline: none;
+  padding: 0;
+  line-height: 42px;
   transition: background-color 0.15s, border-color 0.15s;
 }
 
@@ -593,8 +600,10 @@ input:checked + .slider:before {
   .player-name-input {
     font-size: 1rem;
   }
-  .score-input,
+  .score-input {
+    font-size: 1.55rem;
+  }
   .total-cell {
-    font-size: 1.3rem;
+    font-size: 1.55rem;
   }
 }
