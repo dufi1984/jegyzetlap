@@ -179,14 +179,14 @@ body {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 15px;
+  min-height: 17px;
   margin-top: -1px;
   pointer-events: none;
 }
 
 .bunko-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   display: inline-block;
   vertical-align: middle;
   pointer-events: none;
@@ -559,7 +559,7 @@ input:checked + .slider:before {
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.15s, transform 0.10s;
+  transition: background-color 0.15s, transform 0.08s;
 }
 
 .btn-confirm-bunko:hover {

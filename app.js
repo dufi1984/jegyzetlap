@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v22';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v23';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -58,9 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let selectedPlayerIndex = null;
 
-  // SVG Generators for Bunkó icons
-  const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7.5" fill="#1e293b"/></svg>`;
-  const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="5" fill="#1e293b"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+  // SVG Generators for Bunkó icons (Enlarged inner circle + perfectly proportioned unclipped 8 fur spikes)
+  const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7" fill="#1e293b"/></svg>`;
+  const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="6.5" fill="#1e293b"/><path d="M12 1.5v3.5 M12 19v3.5 M1.5 12h3.5 M19 12h3.5 M4.6 4.6l2.5 2.5 M16.9 16.9l2.5 2.5 M4.6 19.4l2.5-2.5 M16.9 7.1l2.5-2.5" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
   function isGameStarted() {
     return state.rounds.some(round => round.some(val => val !== '' && val !== null && val !== undefined));
@@ -236,7 +236,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const td = document.createElement('td');
       td.className = 'score-cell';
 
-      // Restore native OS soft keyboard with inputmode decimal
       const input = document.createElement('input');
       input.type = 'text';
       input.inputMode = 'decimal';
@@ -438,9 +437,6 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBunkoModal();
   }
 
-  /**
-   * Start New Session / Új kör (Pontok törlése, bunkók és nevek megmaradnak)
-   */
   function startNewSession() {
     const rowCount = calculateScreenRoundsCount();
     state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
@@ -448,9 +444,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTable();
   }
 
-  /**
-   * Trash Icon Button Action: Full reset of score table AND BUNKÓS! (Keeps player names)
-   */
   function resetTableKeepNames() {
     const rowCount = calculateScreenRoundsCount();
     state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
