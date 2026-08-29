@@ -40,13 +40,41 @@
           </table>
         </div>
 
-        <!-- Full-Screen Digital Touchpad Canvas Overlay for Handwriting Recognition -->
-        <canvas id="handwriting-canvas" class="handwriting-canvas is-hidden"></canvas>
         <div id="recognition-toast" class="recognition-toast is-hidden"></div>
 
       </div>
     </div>
   </main>
+
+  <!-- Interactive Touchpad Drawer (Pops up ONLY when a cell is focused) -->
+  <div id="touchpad-drawer" class="touchpad-drawer is-hidden">
+    <div class="touchpad-header">
+      <span id="touchpad-target-label" class="touchpad-target-label">Pont beírása</span>
+      <button id="close-touchpad-btn" class="touchpad-close-btn">&times;</button>
+    </div>
+    
+    <!-- Canvas Drawing Surface (Top half of Touchpad) -->
+    <div class="touchpad-canvas-container">
+      <canvas id="touchpad-canvas" class="touchpad-canvas"></canvas>
+      <div class="canvas-hint">Rajzolj ide ujjal / ceruzával (500ms)...</div>
+    </div>
+
+    <!-- Digital Numpad Buttons (Bottom half of Touchpad) -->
+    <div class="touchpad-numpad" id="touchpad-numpad">
+      <button class="num-btn" data-key="1">1</button>
+      <button class="num-btn" data-key="2">2</button>
+      <button class="num-btn" data-key="3">3</button>
+      <button class="num-btn" data-key="4">4</button>
+      <button class="num-btn" data-key="5">5</button>
+      <button class="num-btn" data-key="6">6</button>
+      <button class="num-btn" data-key="7">7</button>
+      <button class="num-btn" data-key="8">8</button>
+      <button class="num-btn" data-key="9">9</button>
+      <button class="num-btn action-btn" data-key="-">-</button>
+      <button class="num-btn" data-key="0">0</button>
+      <button class="num-btn action-btn" data-key="backspace">⌫</button>
+    </div>
+  </div>
 
   <!-- Footer Toolbar -->
   <footer class="app-footer">
@@ -107,7 +135,7 @@
     </div>
 
     <div class="popover-item">
-      <label class="popover-label" for="toggle-handwriting-checkbox">Kézírásos Touchpad</label>
+      <label class="popover-label" for="toggle-handwriting-checkbox">Digitális Touchpad</label>
       <label class="switch">
         <input type="checkbox" id="toggle-handwriting-checkbox">
         <span class="slider"></span>

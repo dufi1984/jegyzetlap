@@ -68,24 +68,129 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Handwriting Canvas Overlay & Recognition Toast
+   Interactive Touchpad Drawer Overlay (Popping up ONLY when cell is focused)
    -------------------------------------------------------------------------- */
-.handwriting-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
+.touchpad-drawer {
+  position: fixed;
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
-  height: 100%;
-  z-index: 80;
-  pointer-events: auto;
+  max-width: 480px;
+  background-color: #1e293b;
+  color: #ffffff;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -10px 35px rgba(0, 0, 0, 0.4);
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.touchpad-drawer.is-hidden {
+  display: none;
+}
+
+.touchpad-header {
+  background-color: #0f172a;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #334155;
+}
+
+.touchpad-target-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #3b82f6;
+  letter-spacing: 0.02em;
+}
+
+.touchpad-close-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.touchpad-close-btn:hover {
+  color: #ffffff;
+}
+
+/* Drawing Area (Top half of Touchpad) */
+.touchpad-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 110px;
+  background-color: #020617;
   touch-action: none;
   cursor: crosshair;
 }
 
-.handwriting-canvas.is-hidden {
-  display: none;
+.touchpad-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
+.canvas-hint {
+  position: absolute;
+  bottom: 4px;
+  right: 8px;
+  font-size: 0.72rem;
+  color: #475569;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Numpad Buttons Area (Bottom half of Touchpad) */
+.touchpad-numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 10px;
+  background-color: #1e293b;
+  border-top: 1px solid #334155;
+}
+
+.num-btn {
+  height: 44px;
+  font-family: var(--font-sans);
+  font-size: 1.3rem;
+  font-weight: 700;
+  background-color: #334155;
+  color: #ffffff;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.1s, transform 0.08s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.num-btn:hover {
+  background-color: #475569;
+}
+
+.num-btn:active {
+  background-color: #3b82f6;
+  transform: scale(0.95);
+}
+
+.num-btn.action-btn {
+  background-color: #0f172a;
+  color: #cbd5e1;
+}
+
+/* Recognition Toast Indicator */
 .recognition-toast {
   position: fixed;
   top: 24px;

@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v17';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v18';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -35,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // DOM Elements
-  const paperSheet = document.getElementById('paper-sheet');
   const playerHeadersRow = document.getElementById('player-headers-row');
   const totalTbody = document.getElementById('total-tbody');
   const totalRow = document.getElementById('total-row');
@@ -60,17 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const bunkoModalList = document.getElementById('bunko-modal-list');
   const confirmBunkoBtn = document.getElementById('confirm-bunko-btn');
 
-  // Handwriting Canvas Elements
-  const hwCanvas = document.getElementById('handwriting-canvas');
+  // Touchpad Drawer Elements (Pops up ONLY when cell is focused)
+  const touchpadDrawer = document.getElementById('touchpad-drawer');
+  const touchpadTargetLabel = document.getElementById('touchpad-target-label');
+  const closeTouchpadBtn = document.getElementById('close-touchpad-btn');
+  const tpCanvas = document.getElementById('touchpad-canvas');
+  const tpNumpad = document.getElementById('touchpad-numpad');
   const recToast = document.getElementById('recognition-toast');
-  let hwCtx = hwCanvas ? hwCanvas.getContext('2d') : null;
-
+  
+  let tpCtx = tpCanvas ? tpCanvas.getContext('2d') : null;
   let activeScoreInput = null;
   let selectedPlayerIndex = null;
 
   // SVG Generators for Bunkó icons
   const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7.5" fill="#1e293b"/></svg>`;
-  const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="5" fill="#1e293b"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+  const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="5" fill="#1e293b"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
   function isGameStarted() {
     return state.rounds.some(round => round.some(val => val !== '' && val !== null && val !== undefined));
@@ -79,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize UI
   renderTable();
   updateSettingsUI();
-  initHandwritingCanvas();
+  initTouchpadEngine();
 
   // Main Event Listeners
   addPlayerBtn.addEventListener('click', addPlayer);
@@ -112,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleHandwritingCheckbox.addEventListener('change', (e) => {
       state.enableHandwriting = e.target.checked;
       saveState();
-      updateHandwritingCanvasVisibility();
     });
   }
 
@@ -267,9 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
       input.dataset.playerIndex = playerIdx;
       input.setAttribute('autocomplete', 'off');
       
+      // Touchpad Drawer opens ONLY when cell is focused!
       input.addEventListener('focus', () => {
         activeScoreInput = input;
         input.select();
+        openTouchpadDrawer(playerIdx, roundIdx);
       });
 
       td.appendChild(input);
@@ -347,6 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
       activeScoreInput = targetInput;
       targetInput.focus();
       targetInput.select();
+      openTouchpadDrawer(playerIdx, roundIdx);
     }
   }
 
@@ -479,81 +484,109 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // HANDWRITING GESTURE RECOGNIZER & TOUCHPAD ENGINE (Digits 0-9, +, -)
+  // INTERACTIVE TOUCHPAD DRAWER (Drawing Canvas + Digital Numpad)
+  // Pops up ONLY when a score cell is focused!
   // ==========================================================================
   let isDrawing = false;
   let currentStroke = [];
   let allStrokes = [];
   let strokeTimeout = null;
 
-  function initHandwritingCanvas() {
-    if (!hwCanvas || !hwCtx) return;
+  function initTouchpadEngine() {
+    if (!tpCanvas || !tpCtx) return;
 
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    updateHandwritingCanvasVisibility();
+    if (closeTouchpadBtn) {
+      closeTouchpadBtn.addEventListener('click', closeTouchpadDrawer);
+    }
 
-    // Pointer events (works for mouse, touch, and stylus/pencil!)
-    hwCanvas.addEventListener('pointerdown', handlePointerDown);
-    hwCanvas.addEventListener('pointermove', handlePointerMove);
-    hwCanvas.addEventListener('pointerup', handlePointerUp);
-    hwCanvas.addEventListener('pointercancel', handlePointerUp);
+    // Touchpad Numpad Button Clicks
+    if (tpNumpad) {
+      tpNumpad.addEventListener('click', (e) => {
+        const btn = e.target.closest('.num-btn');
+        if (!btn) return;
+        const key = btn.dataset.key;
+        handleNumpadKeyPress(key);
+      });
+    }
+
+    // Canvas Pointer Drawing Listeners
+    tpCanvas.addEventListener('pointerdown', handleCanvasPointerDown);
+    tpCanvas.addEventListener('pointermove', handleCanvasPointerMove);
+    tpCanvas.addEventListener('pointerup', handleCanvasPointerUp);
+    tpCanvas.addEventListener('pointercancel', handleCanvasPointerUp);
   }
 
-  function updateHandwritingCanvasVisibility() {
-    if (!hwCanvas) return;
-    if (state.enableHandwriting !== false) {
-      hwCanvas.classList.remove('is-hidden');
-    } else {
-      hwCanvas.classList.add('is-hidden');
+  function openTouchpadDrawer(playerIdx, roundIdx) {
+    if (state.enableHandwriting === false || !touchpadDrawer) return;
+
+    const playerName = state.players[playerIdx] || `Játékos ${playerIdx + 1}`;
+    if (touchpadTargetLabel) {
+      touchpadTargetLabel.textContent = `${playerName} (Kör ${roundIdx + 1})`;
+    }
+
+    touchpadDrawer.classList.remove('is-hidden');
+    resizeTouchpadCanvas();
+  }
+
+  function closeTouchpadDrawer() {
+    if (touchpadDrawer) {
+      touchpadDrawer.classList.add('is-hidden');
     }
   }
 
-  function resizeCanvas() {
-    if (!hwCanvas || !paperSheet) return;
-    hwCanvas.width = paperSheet.clientWidth;
-    hwCanvas.height = paperSheet.clientHeight;
+  function resizeTouchpadCanvas() {
+    if (!tpCanvas) return;
+    const container = tpCanvas.parentElement;
+    tpCanvas.width = container.clientWidth;
+    tpCanvas.height = container.clientHeight;
   }
 
-  function handlePointerDown(e) {
-    if (state.enableHandwriting === false) return;
+  function handleNumpadKeyPress(key) {
+    if (!activeScoreInput) return;
+
+    if (key === 'backspace') {
+      activeScoreInput.value = activeScoreInput.value.slice(0, -1);
+    } else {
+      activeScoreInput.value = (activeScoreInput.value || '') + key;
+    }
+
+    const event = new Event('input', { bubbles: true });
+    activeScoreInput.dispatchEvent(event);
+  }
+
+  function handleCanvasPointerDown(e) {
     isDrawing = true;
-    currentStroke = [{ x: e.clientX, y: e.clientY }];
+    const rect = tpCanvas.getBoundingClientRect();
+    currentStroke = [{ x: e.clientX - rect.left, y: e.clientY - rect.top }];
 
     if (strokeTimeout) {
       clearTimeout(strokeTimeout);
       strokeTimeout = null;
     }
-
-    // Determine target cell under touch if none active
-    const targetElement = document.elementFromPoint(e.clientX, e.clientY);
-    if (targetElement && targetElement.classList.contains('score-input')) {
-      activeScoreInput = targetElement;
-      activeScoreInput.focus();
-    }
   }
 
-  function handlePointerMove(e) {
-    if (!isDrawing || state.enableHandwriting === false) return;
-    const pt = { x: e.clientX, y: e.clientY };
+  function handleCanvasPointerMove(e) {
+    if (!isDrawing) return;
+    const rect = tpCanvas.getBoundingClientRect();
+    const pt = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     currentStroke.push(pt);
 
     // Draw ink line on canvas
-    hwCtx.strokeStyle = '#2563eb';
-    hwCtx.lineWidth = 4;
-    hwCtx.lineCap = 'round';
-    hwCtx.lineJoin = 'round';
+    tpCtx.strokeStyle = '#60a5fa';
+    tpCtx.lineWidth = 4;
+    tpCtx.lineCap = 'round';
+    tpCtx.lineJoin = 'round';
 
     const pts = currentStroke;
     if (pts.length > 1) {
-      hwCtx.beginPath();
-      hwCtx.moveTo(pts[pts.length - 2].x - hwCanvas.getBoundingClientRect().left, pts[pts.length - 2].y - hwCanvas.getBoundingClientRect().top);
-      hwCtx.lineTo(pts[pts.length - 1].x - hwCanvas.getBoundingClientRect().left, pts[pts.length - 1].y - hwCanvas.getBoundingClientRect().top);
-      hwCtx.stroke();
+      tpCtx.beginPath();
+      tpCtx.moveTo(pts[pts.length - 2].x, pts[pts.length - 2].y);
+      tpCtx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+      tpCtx.stroke();
     }
   }
 
-  function handlePointerUp(e) {
+  function handleCanvasPointerUp(e) {
     if (!isDrawing) return;
     isDrawing = false;
 
@@ -562,44 +595,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     currentStroke = [];
 
-    // Set timeout to process complete gesture (450ms stroke completion window)
-    strokeTimeout = setTimeout(processHandwritingStrokes, 450);
+    // Recognition window set to EXACTLY 500 ms!
+    strokeTimeout = setTimeout(processHandwritingStrokes, 500);
   }
 
   /**
-   * Process drawn strokes & recognize Digits (0-9, +, -)
+   * Process drawn strokes & recognize Digits (0-9, +, -) with 500ms timeout
    */
   function processHandwritingStrokes() {
     if (allStrokes.length === 0) return;
 
     const recognizedChar = classifyGesture(allStrokes);
 
-    if (recognizedChar !== null) {
-      // Find active or default to last focused cell
-      if (!activeScoreInput) {
-        activeScoreInput = roundsTbody.querySelector('input.score-input');
-      }
-
-      if (activeScoreInput) {
-        // Append recognized digit/symbol
-        activeScoreInput.value = (activeScoreInput.value || '') + recognizedChar;
-        
-        // Trigger input event for live sum calculations & state save
-        const event = new Event('input', { bubbles: true });
-        activeScoreInput.dispatchEvent(event);
-
-        showRecognitionToast(`Felismerve: ${recognizedChar}`);
-      }
+    if (recognizedChar !== null && activeScoreInput) {
+      activeScoreInput.value = (activeScoreInput.value || '') + recognizedChar;
+      const event = new Event('input', { bubbles: true });
+      activeScoreInput.dispatchEvent(event);
+      showRecognitionToast(`Felismerve: ${recognizedChar}`);
     }
 
-    // Clear canvas
-    clearCanvas();
+    clearTouchpadCanvas();
   }
 
-  function clearCanvas() {
+  function clearTouchpadCanvas() {
     allStrokes = [];
-    if (hwCtx && hwCanvas) {
-      hwCtx.clearRect(0, 0, hwCanvas.width, hwCanvas.height);
+    if (tpCtx && tpCanvas) {
+      tpCtx.clearRect(0, 0, tpCanvas.width, tpCanvas.height);
     }
   }
 
@@ -616,10 +637,8 @@ document.addEventListener('DOMContentLoaded', () => {
    * Lightweight Stroke Classifier for Digits 0-9, +, -
    */
   function classifyGesture(strokes) {
-    // Combine all points across strokes
     const points = [];
     strokes.forEach(st => points.push(...st));
-
     if (points.length < 4) return null;
 
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
@@ -646,12 +665,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const diagonal = Math.hypot(width, height);
     const isClosedLoop = distStartEnd < 0.38 * diagonal;
 
-    // 1. Check for Minus (-) -> 1 horizontal stroke
+    // 1. Minus (-) -> 1 horizontal stroke
     if (numStrokes === 1 && width > 2.2 * height && Math.abs(dx) > Math.abs(dy)) {
       return '-';
     }
 
-    // 2. Check for Plus (+) -> 2 strokes intersecting OR cross gesture
+    // 2. Plus (+) -> 2 strokes intersecting
     if (numStrokes === 2) {
       const st1 = strokes[0], st2 = strokes[1];
       const dx1 = Math.abs(st1[st1.length - 1].x - st1[0].x);
@@ -664,37 +683,34 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // 3. Check for One (1) -> 1 stroke, tall vertical
+    // 3. One (1) -> 1 stroke, tall vertical
     if (numStrokes === 1 && height > 2.0 * width && dy > 0 && Math.abs(dy) > Math.abs(dx)) {
       return '1';
     }
 
-    // 4. Check for Zero (0) -> 1 stroke, closed loop
+    // 4. Zero (0) -> 1 stroke, closed loop
     if (numStrokes === 1 && isClosedLoop && aspectRatio >= 0.7 && aspectRatio <= 2.5) {
       return '0';
     }
 
-    // 5. Check for Seven (7) -> starts top left, goes right, then diagonal down
+    // 5. Seven (7)
     if (numStrokes === 1 && startPt.x < minX + width * 0.4 && startPt.y < minY + height * 0.4) {
       if (endPt.y > minY + height * 0.6) {
         return '7';
       }
     }
 
-    // 6. Check for Four (4) -> 2 strokes or unistroke angled L
+    // 6. Four (4)
     if (numStrokes === 2) {
       return '4';
     }
 
-    // 7. Feature heuristics for 2, 3, 5, 6, 8, 9 based on midpoints & start/end
     if (isClosedLoop) {
-      // If closed loop near top -> 9, if closed loop near bottom -> 6
       const loopCenterY = (startPt.y + endPt.y) / 2;
       if (loopCenterY < minY + height * 0.5) return '9';
       return '6';
     }
 
-    // Fallback classification based on Y-ends
     if (endPt.x > minX + width * 0.6 && endPt.y > minY + height * 0.6) {
       return '2';
     }
@@ -702,7 +718,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return '3';
     }
 
-    // Default fallback digit guess based on stroke count
     return numStrokes === 1 ? '5' : '8';
   }
 
