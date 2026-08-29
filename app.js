@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v15';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v16';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const addPlayerBtn = document.getElementById('add-player-btn');
   const newSessionBtn = document.getElementById('new-session-btn');
   const resetTableBtn = document.getElementById('reset-table-btn');
+  const reloadPageBtn = document.getElementById('reload-page-btn');
 
   // Settings Popover Elements
   const settingsBtn = document.getElementById('settings-btn');
@@ -77,6 +78,11 @@ document.addEventListener('DOMContentLoaded', () => {
   newSessionBtn.addEventListener('click', startNewSession);
   if (resetTableBtn) {
     resetTableBtn.addEventListener('click', resetTableKeepNames);
+  }
+  if (reloadPageBtn) {
+    reloadPageBtn.addEventListener('click', () => {
+      window.location.reload(true);
+    });
   }
 
   // Settings Popover Toggle

@@ -58,11 +58,16 @@
       </button>
     </div>
 
-    <!-- Right: Kuka (Trash), Bunkó (if Snapszer), Új kör 🔄 -->
+    <!-- Right: Kuka, Force Refresh, Bunkó, Új kör 🔄 -->
     <div class="footer-right">
-      <!-- Trash icon button (Clears scores & bunkos, keeps names) -->
-      <button id="reset-table-btn" class="btn-subtle icon-only-btn" title="Adatok törlése (bunkók és pontok törlése, nevek megmaradnak)">
+      <!-- Trash icon button (Clears scores & bunkos) -->
+      <button id="reset-table-btn" class="btn-subtle icon-only-btn" title="Adatok törlése">
         <svg viewBox="0 0 24 24" class="footer-icon"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+      </button>
+
+      <!-- Temporary Force Reload / Refresh Page Icon Button -->
+      <button id="reload-page-btn" class="btn-subtle icon-only-btn" title="Kényszerített frissítés (Force reload)">
+        <svg viewBox="0 0 24 24" class="footer-icon"><path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0 0 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 0 0 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
       </button>
 
       <!-- Bunkó button (Shown in Snapszer mode) -->
@@ -78,7 +83,7 @@
     </div>
   </footer>
 
-  <!-- Settings Popover Menu (Bottom-left floating drawer menu above gear) -->
+  <!-- Settings Popover Menu -->
   <div id="settings-popover" class="settings-popover is-hidden">
     <div class="popover-item">
       <label class="popover-label">Játék típusa</label>
