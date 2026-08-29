@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v18';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v19';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bunkoModalList = document.getElementById('bunko-modal-list');
   const confirmBunkoBtn = document.getElementById('confirm-bunko-btn');
 
-  // Touchpad Drawer Elements (Pops up ONLY when cell is focused)
+  // Touchpad Drawer Elements
   const touchpadDrawer = document.getElementById('touchpad-drawer');
   const touchpadTargetLabel = document.getElementById('touchpad-target-label');
   const closeTouchpadBtn = document.getElementById('close-touchpad-btn');
@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleHandwritingCheckbox.addEventListener('change', (e) => {
       state.enableHandwriting = e.target.checked;
       saveState();
+      renderRounds(); // Refresh cell inputmodes
     });
   }
 
@@ -262,18 +263,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const input = document.createElement('input');
       input.type = 'text';
-      input.inputMode = 'decimal';
       input.className = 'score-input';
       input.value = roundData[playerIdx] !== undefined ? roundData[playerIdx] : '';
       input.dataset.roundIndex = roundIdx;
       input.dataset.playerIndex = playerIdx;
       input.setAttribute('autocomplete', 'off');
       
-      // Touchpad Drawer opens ONLY when cell is focused!
-      input.addEventListener('focus', () => {
+      // Prevent native OS keyboard popup if Touchpad mode is active!
+      if (state.enableHandwriting !== false) {
+        input.setAttribute('inputmode', 'none');
+        input.setAttribute('readonly', 'readonly');
+      } else {
+        input.setAttribute('inputmode', 'decimal');
+        input.removeAttribute('readonly');
+      }
+
+      input.addEventListener('click', (e) => {
+        if (state.enableHandwriting !== false) {
+          e.preventDefault();
+          activeScoreInput = input;
+          openTouchpadDrawer(playerIdx, roundIdx);
+        }
+      });
+
+      input.addEventListener('focus', (e) => {
         activeScoreInput = input;
-        input.select();
-        openTouchpadDrawer(playerIdx, roundIdx);
+        if (state.enableHandwriting !== false) {
+          openTouchpadDrawer(playerIdx, roundIdx);
+        } else {
+          input.select();
+        }
       });
 
       td.appendChild(input);
@@ -349,9 +368,12 @@ document.addEventListener('DOMContentLoaded', () => {
     );
     if (targetInput) {
       activeScoreInput = targetInput;
-      targetInput.focus();
-      targetInput.select();
-      openTouchpadDrawer(playerIdx, roundIdx);
+      if (state.enableHandwriting !== false) {
+        openTouchpadDrawer(playerIdx, roundIdx);
+      } else {
+        targetInput.focus();
+        targetInput.select();
+      }
     }
   }
 
@@ -485,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ==========================================================================
   // INTERACTIVE TOUCHPAD DRAWER (Drawing Canvas + Digital Numpad)
-  // Pops up ONLY when a score cell is focused!
+  // Pops up ONLY when a score cell is focused & prevents OS keyboard popup!
   // ==========================================================================
   let isDrawing = false;
   let currentStroke = [];
