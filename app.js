@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     darkMode: isDarkFromStorage,
     lockedRowsCount: 0,
     separatorRowIndices: [],
+    lastClosedSession: null,
     pendingBunko: false,
     bunkoBtnVisible: false,
     rikikiBaseScore: 10,
@@ -247,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.playerBunkos = state.players.map(() => []);
     state.lockedRowsCount = 0;
     state.separatorRowIndices = [];
+    state.lastClosedSession = null;
     state.pendingBunko = false;
     state.bunkoBtnVisible = false;
     saveState();
@@ -944,16 +946,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function confirmBunkoSelection() {
     if (selectedPlayerIndex !== null) {
-      const totals = calculateTotals();
+      // Calculate score of the selected player strictly in the just-closed session!
+      let closedSessionScore = 0;
+      if (state.lastClosedSession) {
+        const start = state.lastClosedSession.startIdx;
+        const end = state.lastClosedSession.endIdx;
+        for (let r = start; r <= end; r++) {
+          if (r < state.rounds.length) {
+            const val = state.rounds[r][selectedPlayerIndex];
+            if (val !== '' && val !== null && !isNaN(Number(val))) {
+              closedSessionScore += Number(val);
+            }
+          }
+        }
+      }
+
       if (!state.playerBunkos[selectedPlayerIndex]) {
         state.playerBunkos[selectedPlayerIndex] = [];
       }
-      const totalScore = totals[selectedPlayerIndex];
-      if (totalScore === 0) {
+
+      // If player scored 0 in the closed round -> Szőrös bunkó, else -> Sima bunkó
+      if (closedSessionScore === 0) {
         state.playerBunkos[selectedPlayerIndex].push('szoros');
       } else {
         state.playerBunkos[selectedPlayerIndex].push('sima');
       }
+
       state.pendingBunko = false;
       state.bunkoBtnVisible = false;
       saveState();
@@ -989,10 +1007,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (lastScoredRowIdx >= 0 && lastScoredRowIdx >= state.lockedRowsCount) {
+      const oldLockedCount = state.lockedRowsCount || 0;
+
       if (!state.separatorRowIndices.includes(lastScoredRowIdx)) {
         state.separatorRowIndices.push(lastScoredRowIdx);
       }
       state.lockedRowsCount = Math.max(state.lockedRowsCount, lastScoredRowIdx + 1);
+
+      // Record exactly the rows of this closed session to evaluate 0 vs >0 score for Bunkó!
+      state.lastClosedSession = {
+        startIdx: oldLockedCount,
+        endIdx: lastScoredRowIdx
+      };
 
       const activeRowsRemaining = state.rounds.length - state.lockedRowsCount;
       if (activeRowsRemaining < 8) {
@@ -1020,6 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.playerBunkos = state.players.map(() => []);
     state.lockedRowsCount = 0;
     state.separatorRowIndices = [];
+    state.lastClosedSession = null;
     state.pendingBunko = false;
     state.bunkoBtnVisible = false;
     saveState();
