@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v3';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v4';
   const THEME_KEY = 'kartyas_jegyzetlap_theme';
 
   const calculateScreenRoundsCount = () => {
@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Helper for Fekete macska: finds the first round index that is not yet fully completed.
+   * Helper for Fekete macska: finds the highest round index that should be unlocked.
    */
   function getFirstIncompleteRoundIndex() {
     for (let r = 0; r < state.rounds.length; r++) {
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
       bunkoModalBtn.classList.add('is-hidden');
     }
 
-    // Új kör button is only needed in Snapszer & General (not needed in Rikiki or Fekete macska)
+    // Új kör button is only needed in Snapszer & General
     if (state.gameType === 'snapszer' || state.gameType === 'general') {
       newSessionBtn.classList.remove('is-hidden');
     } else {
@@ -410,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isLockedRow = false;
     if (state.gameType === 'fekete_macska') {
-      // In Fekete macska: only rows up to first incomplete row are unlocked. Future rows are locked.
       isLockedRow = firstIncompleteRow !== null && roundIdx > firstIncompleteRow;
     } else {
       isLockedRow = roundIdx < state.lockedRowsCount;
@@ -560,7 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const autoScore = calculateRikikiScore(currentCell.bid, currentCell.tricks);
       currentCell.score = autoScore;
 
-      // Update DOM score display instantly
+      // Update DOM score display instantly without re-creating inputs!
       const scoreDisplay = roundsTbody.querySelector(
         `.rikiki-score-display[data-round-index="${roundIdx}"][data-player-index="${playerIdx}"]`
       );
@@ -578,11 +577,9 @@ document.addEventListener('DOMContentLoaded', () => {
       // Fekete Macska 26-Point Rule:
       // If round sum == 26, automatically fill all empty cells in this round with 0!
       let roundSum = 0;
-      let enteredCount = 0;
       state.rounds[roundIdx].forEach(cellVal => {
         if (cellVal !== '' && cellVal !== null && cellVal !== undefined && !isNaN(Number(cellVal))) {
           roundSum += Number(cellVal);
-          enteredCount++;
         }
       });
 
@@ -590,17 +587,36 @@ document.addEventListener('DOMContentLoaded', () => {
         state.rounds[roundIdx].forEach((cVal, pIdx) => {
           if (cVal === '' || cVal === null || cVal === undefined) {
             state.rounds[roundIdx][pIdx] = '0';
+            const cellInput = roundsTbody.querySelector(
+              `input[data-round-index="${roundIdx}"][data-player-index="${pIdx}"]`
+            );
+            if (cellInput) {
+              cellInput.value = '0';
+            }
           }
         });
       }
 
-      // Check if enough rows left ahead; if at bottom, append empty row
-      if (roundIdx === state.rounds.length - 1) {
-        appendEmptyRound(false);
-      }
+      // Check if current row is completed, then seamlessly unlock next row in DOM
+      const isCurrentRowComplete = state.rounds[roundIdx].every(
+        cVal => cVal !== '' && cVal !== null && cVal !== undefined
+      );
 
-      // Re-render rows to smoothly unlock the next row in the background!
-      renderRounds();
+      if (isCurrentRowComplete) {
+        const nextRoundIdx = roundIdx + 1;
+        if (nextRoundIdx < state.rounds.length) {
+          const nextRowInputs = roundsTbody.querySelectorAll(
+            `input[data-round-index="${nextRoundIdx}"]`
+          );
+          nextRowInputs.forEach(inp => {
+            inp.classList.remove('is-locked');
+            inp.removeAttribute('readonly');
+            inp.removeAttribute('tabindex');
+          });
+        } else {
+          appendEmptyRound(false);
+        }
+      }
     } else {
       state.rounds[roundIdx][playerIdx] = val;
     }
