@@ -670,16 +670,27 @@ body.dark-theme .rikiki-score-display.is-negative {
 }
 
 .custom-popover-select {
+  appearance: none;
+  -webkit-appearance: none;
   font-family: var(--font-sans);
   font-size: 0.88rem;
   font-weight: 600;
-  padding: 6px 10px;
+  padding: 7px 32px 7px 12px;
   border-radius: 6px;
   border: 1px solid #475569;
   background-color: #0f172a;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px 14px;
   color: #ffffff;
   outline: none;
   cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.custom-popover-select:focus {
+  border-color: #38bdf8;
 }
 
 .rikiki-settings-group {
