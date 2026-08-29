@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v20';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v21';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toggleHandwritingCheckbox.addEventListener('change', (e) => {
       state.enableHandwriting = e.target.checked;
       saveState();
-      renderRounds(); // Refresh cell inputmodes
+      renderRounds();
     });
   }
 
@@ -269,7 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
       input.dataset.playerIndex = playerIdx;
       input.setAttribute('autocomplete', 'off');
       
-      // Prevent native OS keyboard popup if Touchpad mode is active!
       if (state.enableHandwriting !== false) {
         input.setAttribute('inputmode', 'none');
         input.setAttribute('readonly', 'readonly');
@@ -506,8 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // INTERACTIVE TOUCHPAD DRAWER ENGINE (Digits 0-9, +, -)
-  // Pops up ONLY when cell is focused with 500ms recognition delay!
+  // HIGH-PRECISION STROKE RECOGNITION & MULTI-CHARACTER ENGINE
   // ==========================================================================
   let isDrawing = false;
   let currentStroke = [];
@@ -619,18 +617,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Process drawn strokes & recognize Digits (0-9, +, -) with 500ms timeout
+   * Group strokes spatially (left-to-right) or classify compound gestures
    */
   function processHandwritingStrokes() {
     if (allStrokes.length === 0) return;
 
-    const recognizedChar = classifyGesture(allStrokes);
+    // Group strokes by horizontal position (separate sequential characters vs compound gestures)
+    const characterGroups = groupStrokesSpatially(allStrokes);
+    let fullResult = '';
 
-    if (recognizedChar !== null && activeScoreInput) {
-      activeScoreInput.value = (activeScoreInput.value || '') + recognizedChar;
+    characterGroups.forEach(group => {
+      const char = classifySingleOrCompoundGesture(group);
+      if (char !== null) {
+        fullResult += char;
+      }
+    });
+
+    if (fullResult.length > 0 && activeScoreInput) {
+      activeScoreInput.value = (activeScoreInput.value || '') + fullResult;
       const event = new Event('input', { bubbles: true });
       activeScoreInput.dispatchEvent(event);
-      showRecognitionToast(`Felismerve: ${recognizedChar}`);
+      showRecognitionToast(`Felismerve: ${fullResult}`);
     }
 
     clearTouchpadCanvas();
@@ -653,118 +660,161 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Enhanced Stroke Classifier for Digits 0-9, +, -
+   * Separate strokes into distinct left-to-right character groups
    */
-  function classifyGesture(strokes) {
+  function groupStrokesSpatially(strokes) {
+    if (strokes.length <= 1) return [strokes];
+
+    // Compute bounding box for each stroke
+    const strokeBoxes = strokes.map(st => {
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      st.forEach(p => {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+      });
+      return { stroke: st, minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
+    });
+
+    // Sort strokes by minX (left to right)
+    strokeBoxes.sort((a, b) => a.minX - b.minX);
+
+    const groups = [];
+    let currentGroup = [strokeBoxes[0]];
+
+    for (let i = 1; i < strokeBoxes.length; i++) {
+      const prevBox = currentGroup[currentGroup.length - 1];
+      const currBox = strokeBoxes[i];
+
+      // Check spatial overlap: If strokes overlap horizontally or intersect, group them together
+      const horizontalOverlap = !(currBox.minX > prevBox.maxX + 15 || prevBox.minX > currBox.maxX + 15);
+
+      if (horizontalOverlap) {
+        currentGroup.push(currBox);
+      } else {
+        groups.push(currentGroup.map(item => item.stroke));
+        currentGroup = [currBox];
+      }
+    }
+
+    if (currentGroup.length > 0) {
+      groups.push(currentGroup.map(item => item.stroke));
+    }
+
+    return groups;
+  }
+
+  /**
+   * High-precision classifier for single stroke or compound strokes (0-9, +, -)
+   */
+  function classifySingleOrCompoundGesture(strokes) {
     const points = [];
     strokes.forEach(st => points.push(...st));
-    if (points.length < 4) return null;
+    if (points.length < 3) return null;
 
     let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    points.forEach(p => {
+    let totalPathLength = 0;
+
+    points.forEach((p, idx) => {
       if (p.x < minX) minX = p.x;
       if (p.x > maxX) maxX = p.x;
       if (p.y < minY) minY = p.y;
       if (p.y > maxY) maxY = p.y;
+
+      if (idx > 0) {
+        totalPathLength += Math.hypot(p.x - points[idx - 1].x, p.y - points[idx - 1].y);
+      }
     });
 
-    const width = Math.max(12, maxX - minX);
-    const height = Math.max(12, maxY - minY);
+    const width = Math.max(10, maxX - minX);
+    const height = Math.max(10, maxY - minY);
     const aspectRatio = height / width;
     const numStrokes = strokes.length;
 
-    const st1 = strokes[0];
-    const startPt = st1[0];
-    const endPt = st1[st1.length - 1];
+    const firstStroke = strokes[0];
+    const startPt = firstStroke[0];
+    const endPt = firstStroke[firstStroke.length - 1];
 
     const dxTotal = endPt.x - startPt.x;
     const dyTotal = endPt.y - startPt.y;
 
     const distStartEnd = Math.hypot(dxTotal, dyTotal);
-    const diagonal = Math.hypot(width, height);
-    const isClosedLoop = distStartEnd < 0.35 * diagonal;
+    const closedRatio = distStartEnd / (totalPathLength || 1);
+    const isClosedLoop = closedRatio < 0.38;
 
-    let totalAngleChange = 0;
-    let horizReversals = 0;
-
-    for (let i = 1; i < st1.length - 1; i++) {
-      const prev = st1[i - 1];
-      const curr = st1[i];
-      const next = st1[i + 1];
-
-      const v1 = { x: curr.x - prev.x, y: curr.y - prev.y };
-      const v2 = { x: next.x - curr.x, y: next.y - curr.y };
-
-      const cross = v1.x * v2.y - v1.y * v2.x;
-      const dot = v1.x * v2.x + v1.y * v2.y;
-      totalAngleChange += Math.atan2(cross, dot);
-
-      if (i > 2 && i < st1.length - 2) {
-        if ((v1.x > 0 && v2.x < 0) || (v1.x < 0 && v2.x > 0)) horizReversals++;
-      }
-    }
-
-    // 1. MINUS (-) -> 1 stroke, wide horizontal
-    if (numStrokes === 1 && width > 2.0 * height && Math.abs(dxTotal) > 1.8 * Math.abs(dyTotal)) {
-      return '-';
-    }
-
-    // 2. PLUS (+) -> 2 strokes intersecting
+    // --- TWO-STROKE COMPOUND GESTURES (e.g. +, 4, 7, 5) ---
     if (numStrokes === 2) {
-      const stA = strokes[0], stB = strokes[1];
-      const dxA = Math.abs(stA[stA.length - 1].x - stA[0].x);
-      const dyA = Math.abs(stA[stA.length - 1].y - stA[0].y);
-      const dxB = Math.abs(stB[stB.length - 1].x - stB[0].x);
-      const dyB = Math.abs(stB[stB.length - 1].y - stB[0].y);
+      const st1 = strokes[0], st2 = strokes[1];
+      const dx1 = Math.abs(st1[st1.length - 1].x - st1[0].x);
+      const dy1 = Math.abs(st1[st1.length - 1].y - st1[0].y);
+      const dx2 = Math.abs(st2[st2.length - 1].x - st2[0].x);
+      const dy2 = Math.abs(st2[st2.length - 1].y - st2[0].y);
 
-      if ((dxA > dyA && dyB > dxB) || (dyA > dxA && dxB > dyB)) {
+      // Plus (+) -> 1 horizontal + 1 vertical stroke intersecting
+      if ((dx1 > 1.4 * dy1 && dy2 > 1.4 * dx2) || (dy1 > 1.4 * dx1 && dx2 > 1.4 * dy2)) {
         return '+';
       }
-    }
 
-    // 3. ONE (1) -> 1 stroke, tall vertical
-    if (numStrokes === 1 && height > 1.8 * width && dyTotal > 0 && Math.abs(dyTotal) > 1.5 * Math.abs(dxTotal) && Math.abs(totalAngleChange) < 1.8) {
-      return '1';
-    }
-
-    // 4. ZERO (0) -> 1 stroke, closed loop
-    if (numStrokes === 1 && isClosedLoop && Math.abs(totalAngleChange) > 3.0) {
-      return '0';
-    }
-
-    // 5. SEVEN (7) -> 1 stroke, starts top-left, goes right, then diagonal down
-    if (numStrokes === 1 && startPt.x < minX + width * 0.45 && startPt.y < minY + height * 0.4) {
-      if (endPt.y > minY + height * 0.6 && endPt.x < minX + width * 0.6) {
-        return '7';
-      }
-    }
-
-    // 6. FOUR (4) -> 2 strokes
-    if (numStrokes === 2) {
+      // Four (4) -> L-shape or angled strokes
       return '4';
     }
 
-    // 7. SIX (6) vs NINE (9) vs EIGHT (8)
-    if (numStrokes === 1 && isClosedLoop) {
-      const loopCenterY = (startPt.y + endPt.y) / 2;
-      if (loopCenterY < minY + height * 0.45) return '9';
-      if (loopCenterY > minY + height * 0.55) return '6';
+    // --- SINGLE-STROKE GESTURES ---
+
+    // 1. MINUS (-) -> wide horizontal line
+    if (width > 2.0 * height && Math.abs(dxTotal) > 1.8 * Math.abs(dyTotal)) {
+      return '-';
+    }
+
+    // 2. ONE (1) -> tall vertical line, drawn downward
+    if (height > 1.8 * width && Math.abs(dyTotal) > 1.6 * Math.abs(dxTotal) && dyTotal > 0 && closedRatio > 0.6) {
+      return '1';
+    }
+
+    // 3. ZERO (0) -> closed loop, centered centroid
+    if (isClosedLoop && aspectRatio >= 0.65 && aspectRatio <= 2.2) {
+      return '0';
+    }
+
+    // 4. SIX (6) -> loop at bottom, starts high
+    if (isClosedLoop && startPt.y < minY + height * 0.4) {
+      return '6';
+    }
+
+    // 5. NINE (9) -> loop at top, ends low
+    if (isClosedLoop && endPt.y > minY + height * 0.6) {
+      return '9';
+    }
+
+    // 6. EIGHT (8) -> closed loop in middle / figure-8
+    if (isClosedLoop) {
       return '8';
     }
 
-    // 8. TWO (2) vs THREE (3) vs FIVE (5)
-    if (endPt.x > minX + width * 0.55 && endPt.y > minY + height * 0.7) {
+    // 7. SEVEN (7) -> starts top-left, horizontal right, diagonal down-left
+    if (startPt.x < minX + width * 0.45 && startPt.y < minY + height * 0.38 && endPt.y > minY + height * 0.6) {
+      return '7';
+    }
+
+    // 8. TWO (2) -> starts top, curves right/down, ends bottom-right
+    if (endPt.x > minX + width * 0.5 && endPt.y > minY + height * 0.7) {
       return '2';
     }
-    if (horizReversals >= 1 && endPt.x < minX + width * 0.5) {
+
+    // 9. THREE (3) -> double curve on right side, ends bottom-left/middle
+    if (endPt.y > minY + height * 0.65) {
       return '3';
     }
-    if (startPt.x > minX + width * 0.5 && startPt.y < minY + height * 0.3) {
+
+    // 10. FIVE (5)
+    if (startPt.x > minX + width * 0.5 && startPt.y < minY + height * 0.35) {
       return '5';
     }
 
-    if (aspectRatio > 1.5) return '1';
-    if (aspectRatio < 0.6) return '-';
+    // General fallbacks
+    if (aspectRatio > 1.6) return '1';
+    if (aspectRatio < 0.55) return '-';
     return '5';
   }
 
