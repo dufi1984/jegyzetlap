@@ -91,6 +91,8 @@ body.dark-theme {
 
 html, body {
   height: 100%;
+  overscroll-behavior: none; /* Prevent rubber-band bounce pulling page away from fixed bars */
+  -webkit-overflow-scrolling: touch;
 }
 
 body {
@@ -99,12 +101,12 @@ body {
   color: var(--text-main);
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 
 /* --------------------------------------------------------------------------
-   Notepad Container (Directly at top of screen)
+   Notepad Container (Directly at top of screen, smooth scrolling inside)
    -------------------------------------------------------------------------- */
 .viewport-container {
   flex: 1;
@@ -113,6 +115,8 @@ body {
   justify-content: center;
   align-items: flex-start;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .paper-container {
