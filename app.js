@@ -27,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     darkMode: isDarkFromStorage,
     lockedRowsCount: 0,
     separatorRowIndices: [],
+    pendingBunko: false,
+    bunkoBtnVisible: false,
     rikikiBaseScore: 10,
     rikikiTrickValue: 2,
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
@@ -47,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (state.lockedRowsCount === undefined) state.lockedRowsCount = 0;
   if (!state.separatorRowIndices) state.separatorRowIndices = [];
+  if (state.pendingBunko === undefined) state.pendingBunko = false;
+  if (state.bunkoBtnVisible === undefined) state.bunkoBtnVisible = false;
   if (state.rikikiBaseScore === undefined) state.rikikiBaseScore = 10;
   if (state.rikikiTrickValue === undefined) state.rikikiTrickValue = 2;
 
@@ -226,6 +230,8 @@ document.addEventListener('DOMContentLoaded', () => {
     state.playerBunkos = state.players.map(() => []);
     state.lockedRowsCount = 0;
     state.separatorRowIndices = [];
+    state.pendingBunko = false;
+    state.bunkoBtnVisible = false;
     saveState();
     renderTable();
     updateSettingsUI();
@@ -322,14 +328,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateGameTypeUI() {
-    // Bunkó button is only available in Snapszer
-    if (state.gameType === 'snapszer') {
+    // Bunkó button in Snapszer: visible ONLY if explicitly revealed (e.g. after modal closed)
+    if (state.gameType === 'snapszer' && state.bunkoBtnVisible) {
       bunkoModalBtn.classList.remove('is-hidden');
     } else {
       bunkoModalBtn.classList.add('is-hidden');
     }
 
-    // Új kör button is only needed in Snapszer & General
+    // Kör vége button is visible in Snapszer & General
     if (state.gameType === 'snapszer' || state.gameType === 'general') {
       newSessionBtn.classList.remove('is-hidden');
     } else {
@@ -447,6 +453,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const isFull = filledCount === state.players.length;
       if ((isFull && rSum !== 26) || rSum > 26) {
         tr.classList.add('row-danger');
+      }
+    } else if (state.gameType === 'snapszer') {
+      // In Snapszer: rows before lockedRowsCount are locked.
+      // If waiting for Bunkó selection (pendingBunko === true), rows below lockedRowsCount are ALSO locked!
+      if (roundIdx < state.lockedRowsCount) {
+        isLockedRow = true;
+      } else if (state.pendingBunko) {
+        isLockedRow = true;
       }
     } else {
       isLockedRow = roundIdx < state.lockedRowsCount;
@@ -863,6 +877,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function closeBunkoModal() {
     bunkoModal.classList.add('is-hidden');
+    // If closed without confirming and still pending bunkó in Snapszer, reveal Bunkó button in footer!
+    if (state.gameType === 'snapszer' && state.pendingBunko) {
+      state.bunkoBtnVisible = true;
+      saveState();
+      updateGameTypeUI();
+    }
   }
 
   function renderBunkoSelectableList() {
@@ -909,16 +929,23 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         state.playerBunkos[selectedPlayerIndex].push('sima');
       }
+      state.pendingBunko = false;
+      state.bunkoBtnVisible = false;
       saveState();
-      renderHeaders();
+      renderTable();
     }
-    closeBunkoModal();
+    bunkoModal.classList.add('is-hidden');
   }
 
   /**
-   * Start New Round / Új kör 🔄
+   * Start New Round / Kör vége 🔄
    */
   function startNewSession() {
+    if (state.pendingBunko) {
+      openBunkoModal();
+      return;
+    }
+
     let lastScoredRowIdx = -1;
     for (let r = state.rounds.length - 1; r >= 0; r--) {
       const hasContent = state.rounds[r].some(val => {
@@ -945,8 +972,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      saveState();
-      renderTable();
+      if (state.gameType === 'snapszer') {
+        state.pendingBunko = true;
+        state.bunkoBtnVisible = false;
+        saveState();
+        renderTable();
+        openBunkoModal();
+      } else {
+        saveState();
+        renderTable();
+      }
     }
   }
 
@@ -956,6 +991,8 @@ document.addEventListener('DOMContentLoaded', () => {
     state.playerBunkos = state.players.map(() => []);
     state.lockedRowsCount = 0;
     state.separatorRowIndices = [];
+    state.pendingBunko = false;
+    state.bunkoBtnVisible = false;
     saveState();
     renderTable();
   }

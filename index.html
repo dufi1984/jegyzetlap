@@ -78,15 +78,15 @@
       </button>
     </div>
 
-    <!-- Right: Kuka, Bunkó (Exact U-Tray Share icon), Új kör (Plus icon) -->
+    <!-- Right: Kuka, Bunkó, Kör vége -->
     <div class="footer-right">
       <!-- Trash icon button (Clears scores & bunkos) -->
       <button id="reset-table-btn" class="btn-subtle icon-only-btn" title="Adatok és bunkók törlése (nevek megmaradnak)">
         <svg viewBox="0 0 24 24" class="footer-icon"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
       </button>
 
-      <!-- Bunkó button with exact bold rounded U-tray Share icon -->
-      <button id="bunko-modal-btn" class="btn-subtle bunko-btn-footer" title="Bunkó kiosztása">
+      <!-- Bunkó button (Hidden by default in Snapszer, appears if modal is closed without picking) -->
+      <button id="bunko-modal-btn" class="btn-subtle bunko-btn-footer is-hidden" title="Bunkó kiosztása">
         <svg viewBox="0 0 24 24" class="footer-icon stroke-icon" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 10.5v6.5a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-6.5" fill="none"/>
           <path d="M12 16V3.5" fill="none"/>
@@ -95,12 +95,9 @@
         Bunkó
       </button>
 
-      <!-- Új kör (Plus ➕ icon on right, hidden in Rikiki & Fekete macska) -->
-      <button id="new-session-btn" class="btn-subtle btn-new-round" title="Új kör (Pontok lezárása, új forduló indítása)">
-        Új kör
-        <svg viewBox="0 0 24 24" class="footer-icon stroke-icon icon-right" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round">
-          <path d="M12 5v14M5 12h14" fill="none"/>
-        </svg>
+      <!-- Kör vége (Text only, no icon) -->
+      <button id="new-session-btn" class="btn-subtle btn-new-round" title="Kör vége (Pontok lezárása, bunkó kiosztás)">
+        Kör vége
       </button>
     </div>
   </footer>
