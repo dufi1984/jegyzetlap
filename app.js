@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v5';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v6';
   const THEME_KEY = 'kartyas_jegyzetlap_theme';
 
   const calculateScreenRoundsCount = () => {
@@ -423,16 +423,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.gameType === 'fekete_macska') {
       isLockedRow = firstIncompleteRow !== null && roundIdx > firstIncompleteRow;
 
-      // Check danger state in Fekete macska (if some numbers entered but sum != 26)
+      // Only mark danger if all cells in this row are entered AND sum != 26, OR if sum > 26
       let rSum = 0;
-      let hasAny = false;
+      let filledCount = 0;
       roundData.forEach(cVal => {
         if (cVal !== '' && cVal !== null && cVal !== undefined && !isNaN(Number(cVal))) {
           rSum += Number(cVal);
-          hasAny = true;
+          filledCount++;
         }
       });
-      if (hasAny && rSum !== 26) {
+      const isFull = filledCount === state.players.length;
+      if ((isFull && rSum !== 26) || rSum > 26) {
         tr.classList.add('row-danger');
       }
     } else {
@@ -640,10 +641,13 @@ document.addEventListener('DOMContentLoaded', () => {
         enteredCount = state.players.length;
       }
 
-      // 4. Update Danger highlight on row (Highlight danger while sum != 26)
+      // 4. Update Danger highlight ONLY if all cells are filled and sum != 26, OR if sum > 26
+      const isRowFull = (enteredCount === state.players.length);
+      const isInvalid = (isRowFull && currentSum !== 26) || (currentSum > 26);
+
       const tr = roundsTbody.querySelector(`tr.round-row[data-round-index="${roundIdx}"]`);
       if (tr) {
-        if (enteredCount > 0 && currentSum !== 26) {
+        if (isInvalid) {
           tr.classList.add('row-danger');
         } else {
           tr.classList.remove('row-danger');
