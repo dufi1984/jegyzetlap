@@ -43,31 +43,42 @@
     </div>
   </main>
 
-  <!-- Footer Actions (All controls at bottom, non-highlighted style) -->
+  <!-- Footer Actions (Clean, subtle bottom toolbar) -->
   <footer class="app-footer">
-    <button id="add-player-btn" class="btn-subtle">
+    <button id="add-player-btn" class="btn-subtle" title="Új játékos oszlop">
       👤 Új játékos
     </button>
-    <button id="bunko-modal-btn" class="btn-subtle">
+    <button id="bunko-modal-btn" class="btn-subtle" title="Bunkók kiosztása">
       ⚫ Bunkók
+    </button>
+    <button id="new-session-btn" class="btn-subtle" title="Pontok törlése a következő menethez (bunkók megmaradnak)">
+      🧹 Új menet
     </button>
     <button id="toggle-sum-btn" class="btn-subtle">
       Σ Szumma: <span id="sum-status-text">KI</span>
     </button>
-    <button id="reset-btn" class="btn-subtle btn-reset">
+    <button id="reset-btn" class="btn-subtle btn-reset" title="Minden pont és bunkó törlése">
       🔄 Új játék
     </button>
   </footer>
 
-  <!-- Bunkó / Penalty Manager Modal -->
+  <!-- Bunkó / Session End Modal -->
   <div id="bunko-modal" class="modal-overlay is-hidden">
     <div class="modal-card">
       <div class="modal-header">
-        <h2>⚫ Bunkók Kezelése</h2>
+        <h2>⚫ Bunkók Kiosztása</h2>
         <button id="close-modal-btn" class="modal-close-btn">&times;</button>
       </div>
-      <div class="modal-body" id="bunko-modal-list">
-        <!-- Dynamically populated player list with bunko controls -->
+      <div class="modal-body">
+        <p class="modal-subtitle">Add meg a menet végén a bunkókat! (0 pontot szerzett játékosnak Szőrös Bunkó jár)</p>
+        <div id="bunko-modal-list">
+          <!-- Dynamically populated player list with bunko controls -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-clear-scores-btn" class="btn-subtle btn-primary-subtle">
+          🧹 Menet lezárása & Pontok törlése
+        </button>
       </div>
     </div>
   </div>

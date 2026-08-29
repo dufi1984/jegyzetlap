@@ -111,21 +111,12 @@ body {
 }
 
 .player-header-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  width: 100%;
-  cursor: pointer;
-}
-
-.player-name-row {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  gap: 2px;
+  height: 100%;
 }
 
 .player-name-input {
@@ -137,7 +128,7 @@ body {
   background: transparent;
   border: 1px dashed transparent;
   border-radius: 4px;
-  width: 100%;
+  width: calc(100% - 24px); /* Leave room for floating bunkó badges */
   padding: 2px;
   outline: none;
   transition: all 0.15s;
@@ -150,12 +141,16 @@ body {
 }
 
 .remove-player-btn {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: #94a3b8;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  opacity: 0.3;
+  opacity: 0.2;
   padding: 2px;
   border-radius: 3px;
   transition: opacity 0.15s, color 0.15s;
@@ -167,27 +162,33 @@ body {
   color: #ef4444;
 }
 
-/* Player Bunkó Badges Display under/next to name */
+/* Floating Bunkó Badges on the right edge of header cell */
 .player-badges-row {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 3px;
-  min-height: 16px;
-  margin-top: 1px;
+  gap: 2px;
+  cursor: pointer;
+  z-index: 5;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 2px 4px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .bunko-icon {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
   display: inline-block;
   vertical-align: middle;
   transition: transform 0.15s;
 }
 
 .bunko-icon:hover {
-  transform: scale(1.2);
+  transform: scale(1.25);
 }
 
 /* Sticky Total Score Row */
@@ -252,20 +253,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  gap: 6px;
+  padding: 0 12px;
+  gap: 4px;
   z-index: 100;
 }
 
 .btn-subtle {
   font-family: var(--font-sans);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
   color: var(--footer-text);
   background: transparent;
   border: 1px solid #475569;
   border-radius: 6px;
-  padding: 7px 10px;
+  padding: 6px 10px;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
   user-select: none;
@@ -297,7 +298,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(15, 23, 42, 0.6);
+  background-color: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
@@ -316,7 +317,7 @@ body {
   border-radius: 12px;
   width: 100%;
   max-width: 480px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   font-family: var(--font-sans);
 }
@@ -350,11 +351,17 @@ body {
 
 .modal-body {
   padding: 16px;
-  max-height: 70vh;
+  max-height: 60vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.modal-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 4px;
 }
 
 .modal-player-row {
@@ -428,18 +435,38 @@ body {
   background-color: #fee2e2;
 }
 
+.modal-footer {
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-primary-subtle {
+  background-color: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  font-weight: 600;
+}
+
+.btn-primary-subtle:hover {
+  background-color: #1e293b;
+}
+
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .app-footer {
-    padding: 0 8px;
+    padding: 0 4px;
     height: 50px;
   }
   .btn-subtle {
-    font-size: 0.76rem;
-    padding: 6px 6px;
+    font-size: 0.75rem;
+    padding: 5px 6px;
   }
   .player-name-input {
     font-size: 1rem;
+    width: calc(100% - 20px);
   }
   .score-input,
   .total-cell {

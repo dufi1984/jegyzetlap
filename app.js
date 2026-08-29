@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v4';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v5';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -15,13 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let state = loadState() || {
     players: ['Név 1', 'Név 2', 'Név 3', 'Név 4'],
-    // Array of bunkos per player: e.g. [['sima'], ['szoros', 'sima'], [], []]
     playerBunkos: [[], [], [], []],
     showSum: false,
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
   };
 
-  // Ensure playerBunkos array matches players length
   if (!state.playerBunkos || state.playerBunkos.length !== state.players.length) {
     state.playerBunkos = state.players.map((_, i) => state.playerBunkos?.[i] || []);
   }
@@ -39,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const roundsTbody = document.getElementById('rounds-tbody');
   
   const addPlayerBtn = document.getElementById('add-player-btn');
+  const newSessionBtn = document.getElementById('new-session-btn');
   const toggleSumBtn = document.getElementById('toggle-sum-btn');
   const sumStatusText = document.getElementById('sum-status-text');
   const resetBtn = document.getElementById('reset-btn');
@@ -48,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bunkoModal = document.getElementById('bunko-modal');
   const closeModalBtn = document.getElementById('close-modal-btn');
   const bunkoModalList = document.getElementById('bunko-modal-list');
+  const modalClearScoresBtn = document.getElementById('modal-clear-scores-btn');
 
   // SVG Generators for Sima Bunkó and Szőrös Bunkó
   const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7.5" fill="#1e293b"/></svg>`;
@@ -58,14 +58,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Event Listeners
   addPlayerBtn.addEventListener('click', addPlayer);
+  newSessionBtn.addEventListener('click', startNewSession);
   toggleSumBtn.addEventListener('click', toggleSum);
-  resetBtn.addEventListener('click', resetGame);
+  resetBtn.addEventListener('click', resetFullGame);
 
   bunkoModalBtn.addEventListener('click', openBunkoModal);
   closeModalBtn.addEventListener('click', closeBunkoModal);
   bunkoModal.addEventListener('click', (e) => {
     if (e.target === bunkoModal) closeBunkoModal();
   });
+  if (modalClearScoresBtn) {
+    modalClearScoresBtn.addEventListener('click', () => {
+      startNewSession();
+      closeBunkoModal();
+    });
+  }
 
   // Keyboard & Input delegates
   roundsTbody.addEventListener('keydown', handleCellKeyDown);
@@ -82,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Render Player Header Row with Bunkó Badges
+   * Render Player Header Row with Right-Floating Bunkó Badges
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
@@ -95,19 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const innerDiv = document.createElement('div');
       innerDiv.className = 'player-header-inner';
 
-      // Name Input Row
-      const nameRow = document.createElement('div');
-      nameRow.className = 'player-name-row';
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'player-name-input';
-      input.value = playerName;
-      input.placeholder = `Játékos ${index + 1}`;
-      input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
-
-      nameRow.appendChild(input);
-
       if (state.players.length > 2) {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-player-btn';
@@ -117,25 +111,35 @@ document.addEventListener('DOMContentLoaded', () => {
           e.stopPropagation();
           removePlayer(index);
         });
-        nameRow.appendChild(removeBtn);
+        innerDiv.appendChild(removeBtn);
       }
 
-      innerDiv.appendChild(nameRow);
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'player-name-input';
+      input.value = playerName;
+      input.placeholder = `Játékos ${index + 1}`;
+      input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
 
-      // Bunkó Badges Row (under name)
-      const badgesRow = document.createElement('div');
-      badgesRow.className = 'player-badges-row';
-      badgesRow.title = 'Kattints ide a Bunkók kezeléséhez!';
-      badgesRow.addEventListener('click', openBunkoModal);
+      innerDiv.appendChild(input);
 
+      // Bunkó Badges Row (floating on right edge)
       const bunkos = state.playerBunkos[index] || [];
-      bunkos.forEach(type => {
-        const span = document.createElement('span');
-        span.innerHTML = type === 'szoros' ? SVG_SZOROS_BUNKO : SVG_SIMA_BUNKO;
-        badgesRow.appendChild(span.firstChild);
-      });
+      if (bunkos.length > 0) {
+        const badgesRow = document.createElement('div');
+        badgesRow.className = 'player-badges-row';
+        badgesRow.title = 'Kattints ide a Bunkók kezeléséhez!';
+        badgesRow.addEventListener('click', openBunkoModal);
 
-      innerDiv.appendChild(badgesRow);
+        bunkos.forEach(type => {
+          const span = document.createElement('span');
+          span.innerHTML = type === 'szoros' ? SVG_SZOROS_BUNKO : SVG_SIMA_BUNKO;
+          badgesRow.appendChild(span.firstChild);
+        });
+
+        innerDiv.appendChild(badgesRow);
+      }
+
       th.appendChild(innerDiv);
       playerHeadersRow.appendChild(th);
     });
@@ -342,6 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderBunkoModalList() {
     bunkoModalList.innerHTML = '';
+    const totals = calculateTotals();
 
     state.players.forEach((name, playerIdx) => {
       const row = document.createElement('div');
@@ -381,6 +386,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const addSzorosBtn = document.createElement('button');
       addSzorosBtn.className = 'btn-bunko-add';
       addSzorosBtn.innerHTML = `${SVG_SZOROS_BUNKO} + Szőrös Bunkó`;
+      
+      // Highlight if player has 0 total score in current session!
+      if (totals[playerIdx] === 0) {
+        addSzorosBtn.title = 'A játékos 0 pontot szerzett a menetben!';
+      }
+
       addSzorosBtn.addEventListener('click', () => {
         addBunko(playerIdx, 'szoros');
       });
@@ -423,8 +434,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function resetGame() {
-    if (confirm('Biztosan törölni szeretnéd az összes rögzített pontot és bunkót?')) {
+  /**
+   * Start New Session (Clears score table inputs, but PRESERVES player bunkós and names!)
+   */
+  function startNewSession() {
+    if (confirm('Új menet indítása: A rögzített pontok törlődnek az új fordulóhoz, de a játékosok BUNKÓI megmaradnak. Folytatod?')) {
+      const rowCount = calculateScreenRoundsCount();
+      state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
+      saveState();
+      renderTable();
+    }
+  }
+
+  /**
+   * Full Game Reset (Clears scores AND bunkós)
+   */
+  function resetFullGame() {
+    if (confirm('Új teljes játék: Minden pont ÉS az összes BUNKÓ is törlésre kerül. Folytatod?')) {
       const rowCount = calculateScreenRoundsCount();
       state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
       state.playerBunkos = state.players.map(() => []);
