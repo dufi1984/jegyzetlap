@@ -19,6 +19,9 @@
   --score-focus-border: #3b82f6;
   --score-focus-shadow: rgba(59, 130, 246, 0.2);
 
+  --danger-bg: rgba(239, 68, 68, 0.08);
+  --danger-text: #dc2626;
+
   --rikiki-bid-bg: rgba(0, 0, 0, 0.04);
   --rikiki-bid-border: rgba(70, 110, 180, 0.25);
   
@@ -66,6 +69,9 @@ body.dark-theme {
   --score-focus-bg: #1e293b;
   --score-focus-border: #38bdf8;
   --score-focus-shadow: rgba(56, 189, 248, 0.25);
+
+  --danger-bg: rgba(239, 68, 68, 0.16);
+  --danger-text: #f87171;
 
   --rikiki-bid-bg: rgba(255, 255, 255, 0.05);
   --rikiki-bid-border: rgba(148, 163, 184, 0.2);
@@ -171,9 +177,20 @@ body {
 .score-table tr {
   height: var(--row-height);
   border-bottom: 1px solid var(--line-blue);
+  transition: background-color 0.15s ease-in-out;
 }
 
-/* 5-Round Separator Line (Drawn every 5 rounds to easily track card dealing rounds) */
+/* Danger Highlight (e.g. Fekete macska row sum !== 26) */
+.score-table tr.row-danger {
+  background-color: var(--danger-bg);
+}
+
+.score-table tr.row-danger .score-input {
+  color: var(--danger-text);
+  font-weight: 600;
+}
+
+/* 5-Round Separator Line */
 .score-table tr.five-round-separator:not(.round-separator-row) {
   border-bottom: 2px solid var(--five-line-color) !important;
 }
@@ -312,7 +329,7 @@ body {
   outline: none;
   padding: 0;
   line-height: 42px;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .score-input:focus {
@@ -329,7 +346,7 @@ body {
    Rikiki 3 Sub-Cell Layout:
    1. Vállalt (Bid memo) ~31% (Wider for comfortable touch on iPhone 16)
    2. Tényleges (Tricks memo) ~31% (Wider for touch)
-   3. Kiszámolt pontszám (Auto score) ~38% (Smaller font ~1.3rem)
+   3. Kiszámolt pontszám (Auto score) ~38% (Smaller font ~1.25rem)
    -------------------------------------------------------------------------- */
 .rikiki-cell-group {
   display: flex;
@@ -403,7 +420,7 @@ body {
   height: 42px;
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
-  font-size: 1.3rem;
+  font-size: 1.25rem;
   font-weight: 700;
   text-align: center;
   color: var(--text-main);

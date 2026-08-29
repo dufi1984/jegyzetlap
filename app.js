@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v4';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v5';
   const THEME_KEY = 'kartyas_jegyzetlap_theme';
 
   const calculateScreenRoundsCount = () => {
@@ -133,8 +133,19 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function getFirstIncompleteRoundIndex() {
     for (let r = 0; r < state.rounds.length; r++) {
-      const isComplete = state.rounds[r].every(val => val !== '' && val !== null && val !== undefined);
-      if (!isComplete) return r;
+      let sum = 0;
+      let isComplete = true;
+      for (let p = 0; p < state.players.length; p++) {
+        const val = state.rounds[r][p];
+        if (val === '' || val === null || val === undefined) {
+          isComplete = false;
+        } else if (!isNaN(Number(val))) {
+          sum += Number(val);
+        }
+      }
+      if (!isComplete && sum !== 26) {
+        return r;
+      }
     }
     return state.rounds.length - 1;
   }
@@ -411,6 +422,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let isLockedRow = false;
     if (state.gameType === 'fekete_macska') {
       isLockedRow = firstIncompleteRow !== null && roundIdx > firstIncompleteRow;
+
+      // Check danger state in Fekete macska (if some numbers entered but sum != 26)
+      let rSum = 0;
+      let hasAny = false;
+      roundData.forEach(cVal => {
+        if (cVal !== '' && cVal !== null && cVal !== undefined && !isNaN(Number(cVal))) {
+          rSum += Number(cVal);
+          hasAny = true;
+        }
+      });
+      if (hasAny && rSum !== 26) {
+        tr.classList.add('row-danger');
+      }
     } else {
       isLockedRow = roundIdx < state.lockedRowsCount;
     }
@@ -574,35 +598,60 @@ document.addEventListener('DOMContentLoaded', () => {
     } else if (state.gameType === 'fekete_macska') {
       state.rounds[roundIdx][playerIdx] = val;
 
-      // Fekete Macska 26-Point Rule:
-      // If round sum == 26, automatically fill all empty cells in this round with 0!
-      let roundSum = 0;
-      state.rounds[roundIdx].forEach(cellVal => {
-        if (cellVal !== '' && cellVal !== null && cellVal !== undefined && !isNaN(Number(cellVal))) {
-          roundSum += Number(cellVal);
+      // 1. Calculate sum and count remaining empty cells
+      let currentSum = 0;
+      let enteredCount = 0;
+      const emptyIndices = [];
+
+      state.rounds[roundIdx].forEach((cVal, pIdx) => {
+        if (cVal !== '' && cVal !== null && cVal !== undefined && !isNaN(Number(cVal))) {
+          currentSum += Number(cVal);
+          enteredCount++;
+        } else {
+          emptyIndices.push(pIdx);
         }
       });
 
-      if (roundSum === 26) {
-        state.rounds[roundIdx].forEach((cVal, pIdx) => {
-          if (cVal === '' || cVal === null || cVal === undefined) {
-            state.rounds[roundIdx][pIdx] = '0';
-            const cellInput = roundsTbody.querySelector(
-              `input[data-round-index="${roundIdx}"][data-player-index="${pIdx}"]`
-            );
-            if (cellInput) {
-              cellInput.value = '0';
-            }
-          }
+      // 2. If row sum is already 26, fill remaining empty cells with 0
+      if (currentSum === 26 && emptyIndices.length > 0) {
+        emptyIndices.forEach(pIdx => {
+          state.rounds[roundIdx][pIdx] = '0';
+          const cellInput = roundsTbody.querySelector(
+            `input[data-round-index="${roundIdx}"][data-player-index="${pIdx}"]`
+          );
+          if (cellInput) cellInput.value = '0';
         });
+        emptyIndices.length = 0;
+        enteredCount = state.players.length;
+      }
+      // 3. If exactly 1 cell remains empty and currentSum <= 26, auto-calculate the 4th cell!
+      else if (emptyIndices.length === 1 && currentSum <= 26 && enteredCount === state.players.length - 1) {
+        const remainingPlayerIdx = emptyIndices[0];
+        const remainingVal = String(26 - currentSum);
+        state.rounds[roundIdx][remainingPlayerIdx] = remainingVal;
+
+        const cellInput = roundsTbody.querySelector(
+          `input[data-round-index="${roundIdx}"][data-player-index="${remainingPlayerIdx}"]`
+        );
+        if (cellInput) cellInput.value = remainingVal;
+
+        currentSum = 26;
+        emptyIndices.length = 0;
+        enteredCount = state.players.length;
       }
 
-      // Check if current row is completed, then seamlessly unlock next row in DOM
-      const isCurrentRowComplete = state.rounds[roundIdx].every(
-        cVal => cVal !== '' && cVal !== null && cVal !== undefined
-      );
+      // 4. Update Danger highlight on row (Highlight danger while sum != 26)
+      const tr = roundsTbody.querySelector(`tr.round-row[data-round-index="${roundIdx}"]`);
+      if (tr) {
+        if (enteredCount > 0 && currentSum !== 26) {
+          tr.classList.add('row-danger');
+        } else {
+          tr.classList.remove('row-danger');
+        }
+      }
 
-      if (isCurrentRowComplete) {
+      // 5. If row sum is 26 (completed), seamlessly unlock the next row!
+      if (currentSum === 26) {
         const nextRoundIdx = roundIdx + 1;
         if (nextRoundIdx < state.rounds.length) {
           const nextRowInputs = roundsTbody.querySelectorAll(
