@@ -1,9 +1,9 @@
 /**
- * Kártyás Jegyzetlap - Card Game Score Pad Application Logic (Snapszer, Rikiki, Általános)
+ * Kártyás Jegyzetlap - Card Game Score Pad Application Logic (Snapszer, Rikiki, Fekete macska, Általános)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v2';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v3';
   const THEME_KEY = 'kartyas_jegyzetlap_theme';
 
   const calculateScreenRoundsCount = () => {
@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (state.rikikiBaseScore === undefined) state.rikikiBaseScore = 10;
   if (state.rikikiTrickValue === undefined) state.rikikiTrickValue = 2;
 
-  // Default Szumma to true in Rikiki mode
-  if (state.gameType === 'rikiki' && state.showSum === undefined) {
+  // Default Szumma to true in Rikiki & Fekete macska mode
+  if ((state.gameType === 'rikiki' || state.gameType === 'fekete_macska') && state.showSum === undefined) {
     state.showSum = true;
   }
 
@@ -109,10 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const trickVal = Number(state.rikikiTrickValue ?? 2);
 
     if (b === t) {
-      // Sikeres vállalás: alappont + (ütések * 2)
       return baseScore + (t * trickVal);
     } else {
-      // Bukás: eltérésenként mínusz pont
       const diff = Math.abs(b - t);
       return -(diff * trickVal);
     }
@@ -128,6 +126,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return val !== '';
     }));
+  }
+
+  /**
+   * Helper for Fekete macska: finds the first round index that is not yet fully completed.
+   */
+  function getFirstIncompleteRoundIndex() {
+    for (let r = 0; r < state.rounds.length; r++) {
+      const isComplete = state.rounds[r].every(val => val !== '' && val !== null && val !== undefined);
+      if (!isComplete) return r;
+    }
+    return state.rounds.length - 1;
   }
 
   // Synchronize horizontal scrolling between table wrapper and bottom sum bar
@@ -185,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
   gameTypeSelect.addEventListener('change', (e) => {
     state.gameType = e.target.value;
 
-    if (state.gameType === 'rikiki') {
+    if (state.gameType === 'rikiki' || state.gameType === 'fekete_macska') {
       state.showSum = true;
     }
 
@@ -290,10 +299,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateGameTypeUI() {
+    // Bunkó button is only available in Snapszer
     if (state.gameType === 'snapszer') {
       bunkoModalBtn.classList.remove('is-hidden');
     } else {
       bunkoModalBtn.classList.add('is-hidden');
+    }
+
+    // Új kör button is only needed in Snapszer & General (not needed in Rikiki or Fekete macska)
+    if (state.gameType === 'snapszer' || state.gameType === 'general') {
+      newSessionBtn.classList.remove('is-hidden');
+    } else {
+      newSessionBtn.classList.add('is-hidden');
     }
   }
 
@@ -378,21 +395,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderRounds() {
     roundsTbody.innerHTML = '';
+    const firstIncompleteRow = state.gameType === 'fekete_macska' ? getFirstIncompleteRoundIndex() : null;
+
     state.rounds.forEach((roundData, roundIdx) => {
-      const tr = createRoundRow(roundIdx, roundData);
+      const tr = createRoundRow(roundIdx, roundData, firstIncompleteRow);
       roundsTbody.appendChild(tr);
     });
   }
 
-  function createRoundRow(roundIdx, roundData) {
+  function createRoundRow(roundIdx, roundData, firstIncompleteRow = null) {
     const tr = document.createElement('tr');
     tr.className = 'round-row';
     tr.dataset.roundIndex = roundIdx;
 
-    const isLockedRow = roundIdx < state.lockedRowsCount;
+    let isLockedRow = false;
+    if (state.gameType === 'fekete_macska') {
+      // In Fekete macska: only rows up to first incomplete row are unlocked. Future rows are locked.
+      isLockedRow = firstIncompleteRow !== null && roundIdx > firstIncompleteRow;
+    } else {
+      isLockedRow = roundIdx < state.lockedRowsCount;
+    }
+
     const isSeparatorRow = state.separatorRowIndices.includes(roundIdx);
 
-    // 5-Round separator guideline for tracking card deals in Rikiki & general card games
+    // 5-Round separator guideline for tracking card deals
     if ((roundIdx + 1) % 5 === 0) {
       tr.classList.add('five-round-separator');
     }
@@ -408,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cellVal = roundData[playerIdx];
 
       if (state.gameType === 'rikiki') {
-        // 3 Sub-Cell layout for Rikiki: 1. Bid, 2. Tricks, 3. Calculated Score (Clean flat borders)
+        // 3 Sub-Cell layout for Rikiki: 1. Bid (~31%), 2. Tricks (~31%), 3. Calculated Score (~38%)
         const cellGroup = document.createElement('div');
         cellGroup.className = 'rikiki-cell-group';
 
@@ -418,7 +444,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ? (cellVal.score !== undefined && cellVal.score !== '' ? cellVal.score : calculateRikikiScore(bidVal, tricksVal))
           : (cellVal || '');
 
-        // 1. Vállalás (Bid) memo input (No placeholder, clean flat shape)
+        // 1. Vállalás (Bid) memo input
         const bidInput = document.createElement('input');
         bidInput.type = 'text';
         bidInput.inputMode = 'numeric';
@@ -430,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
         bidInput.setAttribute('autocomplete', 'off');
         bidInput.setAttribute('title', 'Vállalt ütések');
 
-        // 2. Tényleges ütések (Tricks) memo input (No placeholder)
+        // 2. Tényleges ütések (Tricks) memo input
         const tricksInput = document.createElement('input');
         tricksInput.type = 'text';
         tricksInput.inputMode = 'numeric';
@@ -472,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cellGroup.appendChild(scoreDisplay);
         td.appendChild(cellGroup);
       } else {
-        // Standard single score input (Snapszer / Általános)
+        // Standard single score input (Snapszer / Fekete macska / Általános)
         const input = document.createElement('input');
         input.type = 'text';
         input.inputMode = 'decimal';
@@ -512,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playerIdx = parseInt(input.dataset.playerIndex, 10);
     const field = input.dataset.field || 'score';
 
-    if (roundIdx < state.lockedRowsCount) return;
+    if (input.classList.contains('is-locked')) return;
 
     const wasGameStarted = isGameStarted();
 
@@ -546,6 +572,35 @@ document.addEventListener('DOMContentLoaded', () => {
           scoreDisplay.classList.remove('is-negative');
         }
       }
+    } else if (state.gameType === 'fekete_macska') {
+      state.rounds[roundIdx][playerIdx] = val;
+
+      // Fekete Macska 26-Point Rule:
+      // If round sum == 26, automatically fill all empty cells in this round with 0!
+      let roundSum = 0;
+      let enteredCount = 0;
+      state.rounds[roundIdx].forEach(cellVal => {
+        if (cellVal !== '' && cellVal !== null && cellVal !== undefined && !isNaN(Number(cellVal))) {
+          roundSum += Number(cellVal);
+          enteredCount++;
+        }
+      });
+
+      if (roundSum === 26) {
+        state.rounds[roundIdx].forEach((cVal, pIdx) => {
+          if (cVal === '' || cVal === null || cVal === undefined) {
+            state.rounds[roundIdx][pIdx] = '0';
+          }
+        });
+      }
+
+      // Check if enough rows left ahead; if at bottom, append empty row
+      if (roundIdx === state.rounds.length - 1) {
+        appendEmptyRound(false);
+      }
+
+      // Re-render rows to smoothly unlock the next row in the background!
+      renderRounds();
     } else {
       state.rounds[roundIdx][playerIdx] = val;
     }
@@ -593,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
         focusCell(currentRound + 1, currentPlayer, true, field);
       }
     } else if (e.key === 'ArrowUp') {
-      if (currentRound > state.lockedRowsCount) {
+      if (currentRound > 0) {
         e.preventDefault();
         focusCell(currentRound - 1, currentPlayer, true, field);
       }
@@ -646,10 +701,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Calculate totals exclusively for the ACTIVE session/round (from lockedRowsCount to end)
+   * Calculate totals (active session / overall for Rikiki and Fekete macska)
    */
   function calculateTotals() {
-    const startRowIdx = state.lockedRowsCount || 0;
+    const startRowIdx = (state.gameType === 'snapszer' || state.gameType === 'general')
+      ? (state.lockedRowsCount || 0)
+      : 0;
+
     return state.players.map((_, playerIdx) => {
       let sum = 0;
       let hasValue = false;

@@ -327,9 +327,9 @@ body {
 
 /* --------------------------------------------------------------------------
    Rikiki 3 Sub-Cell Layout:
-   1. Vállalt (Bid memo) ~21% (No border-radius, clean flat lines)
-   2. Tényleges (Tricks memo) ~21% (No border-radius)
-   3. Kiszámolt pontszám (Auto score) ~58%
+   1. Vállalt (Bid memo) ~31% (Wider for comfortable touch on iPhone 16)
+   2. Tényleges (Tricks memo) ~31% (Wider for touch)
+   3. Kiszámolt pontszám (Auto score) ~38% (Smaller font ~1.3rem)
    -------------------------------------------------------------------------- */
 .rikiki-cell-group {
   display: flex;
@@ -347,11 +347,11 @@ body {
 
 /* Sub-Cell 1: Vállalás (Bid) memo input */
 .rikiki-bid-input {
-  width: 21%;
+  width: 31%;
   height: 42px;
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 600;
   text-align: center;
   color: var(--text-muted);
@@ -373,11 +373,11 @@ body {
 
 /* Sub-Cell 2: Tényleges ütések (Tricks) memo input */
 .rikiki-tricks-input {
-  width: 21%;
+  width: 31%;
   height: 42px;
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 600;
   text-align: center;
   color: var(--text-muted);
@@ -399,12 +399,12 @@ body {
 
 /* Sub-Cell 3: Kiszámolt pontszám (Auto calculated score display) */
 .rikiki-score-display {
-  width: 58%;
+  width: 38%;
   height: 42px;
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
-  font-size: 1.6rem;
-  font-weight: 600;
+  font-size: 1.3rem;
+  font-weight: 700;
   text-align: center;
   color: var(--text-main);
   background: transparent;
@@ -572,6 +572,10 @@ body.dark-theme .rikiki-score-display.is-negative {
   background-color: #3b82f6;
   color: #ffffff;
   border-color: #3b82f6;
+}
+
+.btn-new-round.is-hidden {
+  display: none;
 }
 
 .icon-only-btn {
@@ -963,10 +967,10 @@ input:checked + .slider:before {
   }
   .rikiki-bid-input,
   .rikiki-tricks-input {
-    font-size: 1rem;
+    font-size: 1.1rem;
   }
   .rikiki-score-display {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
   }
   .total-cell {
     font-size: 1.55rem;
