@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v24';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v25';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const roundIdx = parseInt(input.dataset.roundIndex, 10);
     const playerIdx = parseInt(input.dataset.playerIndex, 10);
 
-    if (roundIdx < state.lockedRowsCount) return; // Ignore input on locked rows
+    if (roundIdx < state.lockedRowsCount) return;
 
     const wasGameStarted = isGameStarted();
 
@@ -336,13 +336,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function focusCell(roundIdx, playerIdx) {
+  function focusCell(roundIdx, playerIdx, selectText = true) {
     const targetInput = roundsTbody.querySelector(
       `input[data-round-index="${roundIdx}"][data-player-index="${playerIdx}"]`
     );
     if (targetInput && !targetInput.classList.contains('is-locked')) {
       targetInput.focus();
-      targetInput.select();
+      if (selectText) {
+        targetInput.select();
+      }
     }
   }
 
@@ -461,11 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Start New Round / Új kör 🔄
-   * Keeps existing scores, draws a thick separator line after the last scored row,
-   * locks previous rows from editing, and continues score entry below!
+   * Focuses the first input cell below the separator line without selecting text!
    */
   function startNewSession() {
-    // Find the last row index that contains score values
     let lastScoredRowIdx = -1;
     for (let r = state.rounds.length - 1; r >= 0; r--) {
       if (state.rounds[r].some(val => val !== '' && val !== null && val !== undefined)) {
@@ -480,7 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       state.lockedRowsCount = Math.max(state.lockedRowsCount, lastScoredRowIdx + 1);
 
-      // Ensure enough empty rows exist below the locked area
       const activeRowsRemaining = state.rounds.length - state.lockedRowsCount;
       if (activeRowsRemaining < 8) {
         for (let i = 0; i < 8; i++) {
@@ -491,16 +490,13 @@ document.addEventListener('DOMContentLoaded', () => {
       saveState();
       renderTable();
 
-      // Automatically focus the first input of the new active round
+      // Focus the new round cell with blinking cursor, without selecting any text!
       setTimeout(() => {
-        focusCell(state.lockedRowsCount, 0);
+        focusCell(state.lockedRowsCount, 0, false);
       }, 50);
     }
   }
 
-  /**
-   * Trash Icon Button Action: Complete Reset (Clears scores, separators, locked rows, bunkós, keeps player names)
-   */
   function resetTableKeepNames() {
     const rowCount = calculateScreenRoundsCount();
     state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
