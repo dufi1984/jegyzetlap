@@ -89,6 +89,11 @@ body {
   border-bottom: 1px solid var(--line-blue);
 }
 
+/* Round Separator Line (Thick dark line drawn after 'Új kör') */
+.score-table tr.round-separator-row {
+  border-bottom: 3px solid #0f172a !important;
+}
+
 .score-table th, 
 .score-table td {
   padding: 0 4px;
@@ -123,7 +128,7 @@ body {
 /* Player Name Input (Inter Semi-Bold font, moderate size) */
 .player-name-input {
   font-family: var(--font-sans);
-  font-weight: 600; /* Semi-bold */
+  font-weight: 600;
   font-size: 1.05rem;
   color: #0f172a;
   text-align: center;
@@ -249,6 +254,19 @@ body {
 
 .score-cell:hover .score-input {
   background-color: rgba(241, 245, 249, 0.6);
+}
+
+/* Locked Score Inputs (Previous rounds after 'Új kör') */
+.score-input.is-locked {
+  color: #475569;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+.score-input.is-locked:focus {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* --------------------------------------------------------------------------

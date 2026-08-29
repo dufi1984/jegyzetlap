@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v23';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v24';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
     playerBunkos: [[], [], [], []],
     gameType: 'snapszer',
     showSum: false,
+    lockedRowsCount: 0,
+    separatorRowIndices: [],
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
   };
 
@@ -25,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     state.playerBunkos = state.players.map((_, i) => state.playerBunkos?.[i] || []);
   }
   if (!state.gameType) state.gameType = 'snapszer';
+  if (state.lockedRowsCount === undefined) state.lockedRowsCount = 0;
+  if (!state.separatorRowIndices) state.separatorRowIndices = [];
 
   if (state.rounds.length < initialRowCount) {
     while (state.rounds.length < initialRowCount) {
@@ -58,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let selectedPlayerIndex = null;
 
-  // SVG Generators for Bunkó icons (Enlarged inner circle + perfectly proportioned unclipped 8 fur spikes)
+  // SVG Generators for Bunkó icons
   const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7" fill="#1e293b"/></svg>`;
   const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="6.5" fill="#1e293b"/><path d="M12 1.5v3.5 M12 19v3.5 M1.5 12h3.5 M19 12h3.5 M4.6 4.6l2.5 2.5 M16.9 16.9l2.5 2.5 M4.6 19.4l2.5-2.5 M16.9 7.1l2.5-2.5" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
@@ -102,6 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const rowCount = calculateScreenRoundsCount();
     state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
     state.playerBunkos = state.players.map(() => []);
+    state.lockedRowsCount = 0;
+    state.separatorRowIndices = [];
     saveState();
     renderTable();
   });
@@ -232,6 +238,13 @@ document.addEventListener('DOMContentLoaded', () => {
     tr.className = 'round-row';
     tr.dataset.roundIndex = roundIdx;
 
+    const isLockedRow = roundIdx < state.lockedRowsCount;
+    const isSeparatorRow = state.separatorRowIndices.includes(roundIdx);
+
+    if (isSeparatorRow) {
+      tr.classList.add('round-separator-row');
+    }
+
     state.players.forEach((_, playerIdx) => {
       const td = document.createElement('td');
       td.className = 'score-cell';
@@ -245,7 +258,13 @@ document.addEventListener('DOMContentLoaded', () => {
       input.dataset.playerIndex = playerIdx;
       input.setAttribute('autocomplete', 'off');
 
-      input.addEventListener('focus', () => input.select());
+      if (isLockedRow) {
+        input.classList.add('is-locked');
+        input.setAttribute('readonly', 'readonly');
+        input.setAttribute('tabindex', '-1');
+      } else {
+        input.addEventListener('focus', () => input.select());
+      }
 
       td.appendChild(input);
       tr.appendChild(td);
@@ -260,6 +279,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = e.target;
     const roundIdx = parseInt(input.dataset.roundIndex, 10);
     const playerIdx = parseInt(input.dataset.playerIndex, 10);
+
+    if (roundIdx < state.lockedRowsCount) return; // Ignore input on locked rows
+
     const wasGameStarted = isGameStarted();
 
     let val = input.value.trim();
@@ -297,7 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         focusCell(currentRound + 1, currentPlayer);
       }
     } else if (e.key === 'ArrowUp') {
-      if (currentRound > 0) {
+      if (currentRound > state.lockedRowsCount) {
         e.preventDefault();
         focusCell(currentRound - 1, currentPlayer);
       }
@@ -318,7 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const targetInput = roundsTbody.querySelector(
       `input[data-round-index="${roundIdx}"][data-player-index="${playerIdx}"]`
     );
-    if (targetInput) {
+    if (targetInput && !targetInput.classList.contains('is-locked')) {
       targetInput.focus();
       targetInput.select();
     }
@@ -437,17 +459,54 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBunkoModal();
   }
 
+  /**
+   * Start New Round / Új kör 🔄
+   * Keeps existing scores, draws a thick separator line after the last scored row,
+   * locks previous rows from editing, and continues score entry below!
+   */
   function startNewSession() {
-    const rowCount = calculateScreenRoundsCount();
-    state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
-    saveState();
-    renderTable();
+    // Find the last row index that contains score values
+    let lastScoredRowIdx = -1;
+    for (let r = state.rounds.length - 1; r >= 0; r--) {
+      if (state.rounds[r].some(val => val !== '' && val !== null && val !== undefined)) {
+        lastScoredRowIdx = r;
+        break;
+      }
+    }
+
+    if (lastScoredRowIdx >= 0) {
+      if (!state.separatorRowIndices.includes(lastScoredRowIdx)) {
+        state.separatorRowIndices.push(lastScoredRowIdx);
+      }
+      state.lockedRowsCount = Math.max(state.lockedRowsCount, lastScoredRowIdx + 1);
+
+      // Ensure enough empty rows exist below the locked area
+      const activeRowsRemaining = state.rounds.length - state.lockedRowsCount;
+      if (activeRowsRemaining < 8) {
+        for (let i = 0; i < 8; i++) {
+          state.rounds.push(state.players.map(() => ''));
+        }
+      }
+
+      saveState();
+      renderTable();
+
+      // Automatically focus the first input of the new active round
+      setTimeout(() => {
+        focusCell(state.lockedRowsCount, 0);
+      }, 50);
+    }
   }
 
+  /**
+   * Trash Icon Button Action: Complete Reset (Clears scores, separators, locked rows, bunkós, keeps player names)
+   */
   function resetTableKeepNames() {
     const rowCount = calculateScreenRoundsCount();
     state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
     state.playerBunkos = state.players.map(() => []);
+    state.lockedRowsCount = 0;
+    state.separatorRowIndices = [];
     saveState();
     renderTable();
   }
