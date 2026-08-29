@@ -3,8 +3,9 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v7';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v1';
   const THEME_KEY = 'kartyas_jegyzetlap_theme';
+  const GAME_TYPE_KEY = 'kartyas_jegyzetlap_game_type';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -16,11 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const savedTheme = localStorage.getItem(THEME_KEY);
   const isDarkFromStorage = savedTheme === 'dark';
+  const savedGameType = localStorage.getItem(GAME_TYPE_KEY);
 
   let state = loadState() || {
     players: ['Név1', 'Név2', 'Név3', 'Név4'],
     playerBunkos: [[], [], [], []],
-    gameType: 'snapszer',
+    gameType: savedGameType || 'snapszer',
     showSum: false,
     darkMode: isDarkFromStorage,
     lockedRowsCount: 0,
@@ -33,7 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!state.playerBunkos || state.playerBunkos.length !== state.players.length) {
     state.playerBunkos = state.players.map((_, i) => state.playerBunkos?.[i] || []);
   }
-  if (!state.gameType) state.gameType = 'snapszer';
+  
+  if (savedGameType) {
+    state.gameType = savedGameType;
+  } else if (!state.gameType) {
+    state.gameType = 'snapszer';
+  }
+
   if (savedTheme) {
     state.darkMode = isDarkFromStorage;
   }
@@ -204,6 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   gameTypeSelect.addEventListener('change', (e) => {
     state.gameType = e.target.value;
+
+    try {
+      localStorage.setItem(GAME_TYPE_KEY, state.gameType);
+    } catch (err) {}
 
     if (state.gameType === 'rikiki' || state.gameType === 'fekete_macska') {
       state.showSum = true;
