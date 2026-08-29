@@ -1,19 +1,19 @@
 /* ==========================================================================
-   Kártyás Jegyzetlap - Notebook Score Pad Stylesheet
+   Kártyás Jegyzetlap - Clean White Paper Score Pad Stylesheet
    ========================================================================== */
 
 :root {
-  --paper-bg: #fffde7;
-  --paper-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --line-blue: rgba(70, 110, 180, 0.28);
-  --line-red: #eb4d4b;
-  --text-dark: #1a252f;
+  --outer-bg: #eceff4;
+  --paper-bg: #ffffff;
+  --paper-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+  --line-blue: rgba(70, 110, 180, 0.22);
+  --text-dark: #1e293b;
   
   --font-serif: 'Courier Prime', monospace, Georgia, serif;
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 
-  --footer-bg: #181b22;
-  --footer-text: #94a3b8;
+  --footer-bg: #1e293b;
+  --footer-text: #cbd5e1;
   
   --row-height: 44px;
 }
@@ -31,7 +31,7 @@ html, body {
 
 body {
   font-family: var(--font-serif);
-  background-color: #12161f;
+  background-color: var(--outer-bg);
   color: var(--text-dark);
   display: flex;
   flex-direction: column;
@@ -63,21 +63,8 @@ body {
   min-height: calc(100vh - 54px); /* Full screen height minus footer */
   box-shadow: var(--paper-shadow);
   overflow: hidden;
-  border-left: 1px solid #e0d8b0;
-  border-right: 1px solid #e0d8b0;
-}
-
-/* Narrower red vertical margin line on left (20px from left) */
-.red-margin {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 20px;
-  width: 2px;
-  background-color: var(--line-red);
-  z-index: 5;
-  pointer-events: none;
-  opacity: 0.85;
+  border-left: 1px solid #e2e8f0;
+  border-right: 1px solid #e2e8f0;
 }
 
 /* --------------------------------------------------------------------------
@@ -105,23 +92,17 @@ body {
 
 .score-table th, 
 .score-table td {
-  padding: 0 2px;
+  padding: 0 4px;
   text-align: center;
   position: relative;
   vertical-align: middle;
 }
 
-/* First player cell left margin spacing */
-.score-table th:first-child,
-.score-table td:first-child {
-  padding-left: 24px; /* Gives room past the 20px red line */
-}
-
 /* Player Column Headers */
 .score-table thead tr {
   height: 50px;
-  background-color: rgba(240, 235, 195, 0.45);
-  border-bottom: 2px solid #2c3e50;
+  background-color: #f8fafc;
+  border-bottom: 2px solid #0f172a;
 }
 
 .player-header {
@@ -141,7 +122,7 @@ body {
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.15rem;
-  color: #1e293b;
+  color: #0f172a;
   text-align: center;
   background: transparent;
   border: 1px dashed transparent;
@@ -154,7 +135,7 @@ body {
 
 .player-name-input:focus,
 .player-name-input:hover {
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: #f1f5f9;
   border-color: #94a3b8;
 }
 
@@ -188,11 +169,11 @@ body {
 }
 
 .total-row {
-  background-color: #f7f3d5;
+  background-color: #f1f5f9;
   font-size: 1.25rem;
   font-weight: 700;
   border-bottom: 2px solid var(--text-dark) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .total-cell {
@@ -221,11 +202,11 @@ body {
 .score-input:focus {
   background-color: #ffffff;
   border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
 .score-cell:hover .score-input {
-  background-color: rgba(255, 255, 255, 0.4);
+  background-color: rgba(241, 245, 249, 0.6);
 }
 
 /* --------------------------------------------------------------------------
@@ -234,7 +215,7 @@ body {
 .app-footer {
   height: 54px;
   background-color: var(--footer-bg);
-  border-top: 1px solid #2d3748;
+  border-top: 1px solid #334155;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -249,7 +230,7 @@ body {
   font-weight: 500;
   color: var(--footer-text);
   background: transparent;
-  border: 1px solid #334155;
+  border: 1px solid #475569;
   border-radius: 6px;
   padding: 7px 12px;
   cursor: pointer;
@@ -259,9 +240,9 @@ body {
 }
 
 .btn-subtle:hover {
-  background-color: #1e293b;
-  color: #f1f5f9;
-  border-color: #475569;
+  background-color: #334155;
+  color: #ffffff;
+  border-color: #64748b;
 }
 
 .btn-subtle:active {
@@ -269,8 +250,9 @@ body {
 }
 
 .btn-subtle.active {
-  background-color: #334155;
+  background-color: #3b82f6;
   color: #ffffff;
+  border-color: #3b82f6;
 }
 
 /* Responsive adjustments */
@@ -288,12 +270,5 @@ body {
   }
   .score-input {
     font-size: 1.1rem;
-  }
-  .red-margin {
-    left: 16px;
-  }
-  .score-table th:first-child,
-  .score-table td:first-child {
-    padding-left: 20px;
   }
 }

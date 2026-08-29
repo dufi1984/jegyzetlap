@@ -15,8 +15,6 @@
   <main class="viewport-container">
     <div class="paper-container">
       <div class="paper-sheet" id="paper-sheet">
-        <!-- Red vertical margin line on left (narrower distance) -->
-        <div class="red-margin"></div>
 
         <!-- Scoreboard Table Container -->
         <div class="table-wrapper">
@@ -28,8 +26,8 @@
               </tr>
             </thead>
             
-            <!-- Live Total Sticky Row (Toggleable) -->
-            <tbody id="total-tbody" class="total-tbody">
+            <!-- Live Total Sticky Row (Disabled by default) -->
+            <tbody id="total-tbody" class="total-tbody is-hidden">
               <tr id="total-row" class="total-row">
                 <!-- Dynamically populated total scores -->
               </tr>
@@ -45,13 +43,13 @@
     </div>
   </main>
 
-  <!-- Footer Actions (All controls at bottom, subtle design) -->
+  <!-- Footer Actions (All controls at bottom, non-highlighted style) -->
   <footer class="app-footer">
     <button id="add-player-btn" class="btn-subtle">
       👤 Új játékos
     </button>
     <button id="toggle-sum-btn" class="btn-subtle">
-      Σ Összesítés: <span id="sum-status-text">BE</span>
+      Σ Összesítés: <span id="sum-status-text">KI</span>
     </button>
     <button id="reset-btn" class="btn-subtle btn-reset">
       🔄 Új játék

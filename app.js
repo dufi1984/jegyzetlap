@@ -3,11 +3,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v2';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v3';
 
   // Calculate default screen-filling round count (cell height ~44px)
   const calculateScreenRoundsCount = () => {
-    const availableHeight = window.innerHeight - 100; // minus footer & header
+    const availableHeight = window.innerHeight - 100;
     const rows = Math.max(16, Math.floor(availableHeight / 44));
     return rows;
   };
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let state = loadState() || {
     players: ['Név 1', 'Név 2', 'Név 3', 'Név 4'],
-    showSum: true,
+    showSum: false, // Disabled by default
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
   };
 
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Render Player Header Row (No # column)
+   * Render Player Header Row
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
@@ -151,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Helper to create a single round TR element (No sorszámozás cell)
+   * Helper to create a single round TR element
    */
   function createRoundRow(roundIdx, roundData) {
     const tr = document.createElement('tr');
@@ -170,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
       input.dataset.roundIndex = roundIdx;
       input.dataset.playerIndex = playerIdx;
       input.setAttribute('autocomplete', 'off');
-      // No placeholder '-' or '0'
 
       td.appendChild(input);
       tr.appendChild(td);
