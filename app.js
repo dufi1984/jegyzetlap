@@ -3,7 +3,8 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v30';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_state_v1';
+  const THEME_KEY = 'kartyas_jegyzetlap_theme';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -13,12 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const initialRowCount = calculateScreenRoundsCount();
 
+  const savedTheme = localStorage.getItem(THEME_KEY);
+  const isDarkFromStorage = savedTheme === 'dark';
+
   let state = loadState() || {
     players: ['Név1', 'Név2', 'Név3', 'Név4'],
     playerBunkos: [[], [], [], []],
     gameType: 'snapszer',
     showSum: false,
-    darkMode: false,
+    darkMode: isDarkFromStorage,
     lockedRowsCount: 0,
     separatorRowIndices: [],
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
@@ -28,9 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
     state.playerBunkos = state.players.map((_, i) => state.playerBunkos?.[i] || []);
   }
   if (!state.gameType) state.gameType = 'snapszer';
-  if (state.darkMode === undefined) state.darkMode = false;
+  if (savedTheme) {
+    state.darkMode = isDarkFromStorage;
+  }
   if (state.lockedRowsCount === undefined) state.lockedRowsCount = 0;
   if (!state.separatorRowIndices) state.separatorRowIndices = [];
+
+  // Default Szumma to true in Rikiki mode
+  if (state.gameType === 'rikiki' && state.showSum === undefined) {
+    state.showSum = true;
+  }
 
   if (state.rounds.length < initialRowCount) {
     while (state.rounds.length < initialRowCount) {
@@ -94,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Apply Theme
+  // Apply Theme immediately
   applyTheme();
 
   // Initialize UI
@@ -125,6 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (toggleDarkCheckbox) {
     toggleDarkCheckbox.addEventListener('change', (e) => {
       state.darkMode = e.target.checked;
+      try {
+        localStorage.setItem(THEME_KEY, state.darkMode ? 'dark' : 'light');
+      } catch (err) {}
       saveState();
       applyTheme();
     });
@@ -137,7 +151,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   gameTypeSelect.addEventListener('change', (e) => {
+    const prevType = state.gameType;
     state.gameType = e.target.value;
+
+    // Default Szumma to ON when entering Rikiki!
+    if (state.gameType === 'rikiki') {
+      state.showSum = true;
+    }
+
     const rowCount = calculateScreenRoundsCount();
     state.rounds = Array.from({ length: rowCount }, () => createEmptyRoundArray());
     state.playerBunkos = state.players.map(() => []);
@@ -145,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.separatorRowIndices = [];
     saveState();
     renderTable();
+    updateSettingsUI();
   });
 
   // Bunkó Modal Listeners
@@ -163,8 +185,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyTheme() {
     if (state.darkMode) {
+      document.documentElement.classList.add('dark-theme');
       document.body.classList.add('dark-theme');
     } else {
+      document.documentElement.classList.remove('dark-theme');
       document.body.classList.remove('dark-theme');
     }
   }
@@ -433,10 +457,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') {
       e.preventDefault();
       if (state.gameType === 'rikiki' && field === 'bid') {
-        // Move from bid to score input of same player
         focusRikikiCell(currentRound, currentPlayer, 'score');
       } else {
-        // Move to next round
         if (currentRound === state.rounds.length - 1) {
           appendEmptyRound(false);
         }

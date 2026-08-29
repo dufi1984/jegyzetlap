@@ -48,6 +48,7 @@
 /* --------------------------------------------------------------------------
    OLED Eye-Friendly Dark Theme (WCAG AA / AAA Compliant Contrast)
    -------------------------------------------------------------------------- */
+html.dark-theme,
 body.dark-theme {
   --outer-bg: #090d16;
   --paper-bg: #111827;
