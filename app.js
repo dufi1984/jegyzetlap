@@ -454,8 +454,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const isSeparatorRow = state.separatorRowIndices.includes(roundIdx);
 
-    // 5-Round separator guideline for tracking card deals
-    if ((roundIdx + 1) % 5 === 0) {
+    // 5-Round separator guideline for tracking card deals (Rikiki only)
+    if (state.gameType === 'rikiki' && (roundIdx + 1) % 5 === 0) {
       tr.classList.add('five-round-separator');
     }
 
