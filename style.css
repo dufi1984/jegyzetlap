@@ -19,7 +19,7 @@
   --score-focus-shadow: rgba(59, 130, 246, 0.2);
 
   --rikiki-bid-bg: rgba(0, 0, 0, 0.04);
-  --rikiki-bid-border: rgba(70, 110, 180, 0.25);
+  --rikiki-bid-border: rgba(70, 110, 180, 0.22);
   
   --bunko-color: #1e293b;
   --bunko-szoros-color: #1e293b;
@@ -66,7 +66,7 @@ body.dark-theme {
   --score-focus-shadow: rgba(56, 189, 248, 0.25);
 
   --rikiki-bid-bg: rgba(255, 255, 255, 0.05);
-  --rikiki-bid-border: rgba(148, 163, 184, 0.2);
+  --rikiki-bid-border: rgba(148, 163, 184, 0.18);
 
   --bunko-color: #38bdf8;
   --bunko-szoros-color: #38bdf8;
@@ -178,7 +178,7 @@ body {
 
 .score-table th, 
 .score-table td {
-  padding: 0 3px;
+  padding: 0 2px;
   text-align: center;
   position: relative;
   vertical-align: middle;
@@ -289,7 +289,7 @@ body {
   stroke: currentColor;
 }
 
-/* Score Cells & Inputs */
+/* Score Cells & Inputs (Standard) */
 .score-input {
   width: 100%;
   height: 42px;
@@ -319,7 +319,10 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Rikiki Dual Sub-Cell Layout (Left Memo Bid + Right Actual Score)
+   Rikiki 3 Sub-Cell Layout:
+   1. Vállalt (Bid memo) ~27%
+   2. Tényleges (Tricks memo) ~27%
+   3. Kiszámolt pontszám (Auto score) ~46%
    -------------------------------------------------------------------------- */
 .rikiki-cell-group {
   display: flex;
@@ -336,13 +339,13 @@ body {
   background-color: rgba(255, 255, 255, 0.04);
 }
 
-/* Left Sub-Cell (Vállalás / Bid memo) */
+/* Sub-Cell 1: Vállalás (Bid) memo input */
 .rikiki-bid-input {
-  width: 36%;
+  width: 27%;
   height: 42px;
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 600;
   text-align: center;
   color: var(--text-muted);
@@ -361,14 +364,39 @@ body {
   box-shadow: inset 0 0 0 2px var(--score-focus-border);
 }
 
-/* Right Sub-Cell (Tényleges pontszám / Actual score) */
-.rikiki-score-input {
-  width: 64%;
+/* Sub-Cell 2: Tényleges ütések (Tricks) memo input */
+.rikiki-tricks-input {
+  width: 27%;
   height: 42px;
   font-family: var(--font-sans);
   font-variant-numeric: tabular-nums;
-  font-size: 1.6rem;
-  font-weight: 500;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-muted);
+  background-color: var(--rikiki-bid-bg);
+  border: none;
+  border-right: 1px solid var(--rikiki-bid-border);
+  outline: none;
+  padding: 0;
+  line-height: 42px;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.rikiki-tricks-input:focus {
+  background-color: var(--score-focus-bg);
+  color: var(--text-main);
+  box-shadow: inset 0 0 0 2px var(--score-focus-border);
+}
+
+/* Sub-Cell 3: Kiszámolt pontszám (Auto calculated score) */
+.rikiki-score-display {
+  width: 46%;
+  height: 42px;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.55rem;
+  font-weight: 600;
   text-align: center;
   color: var(--text-main);
   background: transparent;
@@ -376,26 +404,34 @@ body {
   outline: none;
   padding: 0;
   line-height: 42px;
-  transition: background-color 0.15s;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.rikiki-score-input:focus {
-  background-color: var(--score-focus-bg);
-  box-shadow: inset 0 0 0 2px var(--score-focus-border);
+/* Negative Score Highlighting */
+.rikiki-score-display.is-negative {
+  color: #ef4444;
+}
+
+body.dark-theme .rikiki-score-display.is-negative {
+  color: #f87171;
 }
 
 /* Locked Score Inputs */
 .score-input.is-locked,
 .rikiki-bid-input.is-locked,
-.rikiki-score-input.is-locked {
-  color: var(--text-locked);
+.rikiki-tricks-input.is-locked,
+.rikiki-score-display.is-locked {
+  color: var(--text-locked) !important;
   cursor: not-allowed;
   user-select: none;
 }
 
 .score-input.is-locked:focus,
 .rikiki-bid-input.is-locked:focus,
-.rikiki-score-input.is-locked:focus {
+.rikiki-tricks-input.is-locked:focus {
   background-color: transparent;
   border-color: transparent;
   box-shadow: none;
@@ -571,7 +607,7 @@ body {
   position: fixed;
   bottom: calc(74px + env(safe-area-inset-bottom, 0px));
   left: max(12px, env(safe-area-inset-left));
-  width: 275px;
+  width: 290px;
   background-color: var(--popover-bg);
   color: var(--popover-text);
   border-radius: 12px;
@@ -614,6 +650,39 @@ body {
   color: #ffffff;
   outline: none;
   cursor: pointer;
+}
+
+.rikiki-settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 10px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.rikiki-settings-group.is-hidden {
+  display: none;
+}
+
+.custom-popover-number-input {
+  width: 60px;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-align: center;
+  padding: 5px 6px;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: #ffffff;
+  outline: none;
+}
+
+.custom-popover-number-input:focus {
+  border-color: #38bdf8;
 }
 
 .popover-action-item {
@@ -880,12 +949,15 @@ input:checked + .slider:before {
   .player-name-input {
     font-size: 1rem;
   }
-  .score-input,
-  .rikiki-score-input {
+  .score-input {
     font-size: 1.55rem;
   }
-  .rikiki-bid-input {
-    font-size: 1.1rem;
+  .rikiki-bid-input,
+  .rikiki-tricks-input {
+    font-size: 1rem;
+  }
+  .rikiki-score-display {
+    font-size: 1.45rem;
   }
   .total-cell {
     font-size: 1.55rem;

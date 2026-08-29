@@ -116,6 +116,18 @@
       </select>
     </div>
 
+    <!-- Rikiki Scoring Parameters (Shown only when Rikiki is selected) -->
+    <div id="rikiki-settings-group" class="rikiki-settings-group is-hidden">
+      <div class="popover-item">
+        <label class="popover-label" for="rikiki-base-score-input">Helyes vállalás (alappont)</label>
+        <input type="number" id="rikiki-base-score-input" class="custom-popover-number-input" value="10" min="0" step="1">
+      </div>
+      <div class="popover-item">
+        <label class="popover-label" for="rikiki-trick-value-input">Ütés értéke (pont/eltérés)</label>
+        <input type="number" id="rikiki-trick-value-input" class="custom-popover-number-input" value="2" min="0" step="1">
+      </div>
+    </div>
+
     <div class="popover-item">
       <label class="popover-label" for="toggle-dark-checkbox">Sötét mód</label>
       <label class="switch">
