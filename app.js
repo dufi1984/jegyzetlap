@@ -109,10 +109,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const trickVal = Number(state.rikikiTrickValue ?? 2);
 
     if (b === t) {
-      // Sikeres vállalás (0 vagy több ütés): alappont + (ütések * ütés értéke)
+      // Sikeres vállalás: alappont + (ütések * 2)
       return baseScore + (t * trickVal);
     } else {
-      // Bukás: eltérésenként mínusz pont jár
+      // Bukás: eltérésenként mínusz pont
       const diff = Math.abs(b - t);
       return -(diff * trickVal);
     }
@@ -392,6 +392,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const isLockedRow = roundIdx < state.lockedRowsCount;
     const isSeparatorRow = state.separatorRowIndices.includes(roundIdx);
 
+    // 5-Round separator guideline for tracking card deals in Rikiki & general card games
+    if ((roundIdx + 1) % 5 === 0) {
+      tr.classList.add('five-round-separator');
+    }
+
     if (isSeparatorRow) {
       tr.classList.add('round-separator-row');
     }
@@ -403,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cellVal = roundData[playerIdx];
 
       if (state.gameType === 'rikiki') {
-        // 3 Sub-Cell layout for Rikiki: 1. Bid, 2. Tricks, 3. Calculated Score
+        // 3 Sub-Cell layout for Rikiki: 1. Bid, 2. Tricks, 3. Calculated Score (Clean flat borders)
         const cellGroup = document.createElement('div');
         cellGroup.className = 'rikiki-cell-group';
 
@@ -413,26 +418,24 @@ document.addEventListener('DOMContentLoaded', () => {
           ? (cellVal.score !== undefined && cellVal.score !== '' ? cellVal.score : calculateRikikiScore(bidVal, tricksVal))
           : (cellVal || '');
 
-        // 1. Vállalás (Bid) memo input
+        // 1. Vállalás (Bid) memo input (No placeholder, clean flat shape)
         const bidInput = document.createElement('input');
         bidInput.type = 'text';
         bidInput.inputMode = 'numeric';
         bidInput.className = 'rikiki-bid-input';
         bidInput.value = bidVal;
-        bidInput.placeholder = 'v';
         bidInput.dataset.roundIndex = roundIdx;
         bidInput.dataset.playerIndex = playerIdx;
         bidInput.dataset.field = 'bid';
         bidInput.setAttribute('autocomplete', 'off');
         bidInput.setAttribute('title', 'Vállalt ütések');
 
-        // 2. Tényleges ütések (Tricks) memo input
+        // 2. Tényleges ütések (Tricks) memo input (No placeholder)
         const tricksInput = document.createElement('input');
         tricksInput.type = 'text';
         tricksInput.inputMode = 'numeric';
         tricksInput.className = 'rikiki-tricks-input';
         tricksInput.value = tricksVal;
-        tricksInput.placeholder = 'ü';
         tricksInput.dataset.roundIndex = roundIdx;
         tricksInput.dataset.playerIndex = playerIdx;
         tricksInput.dataset.field = 'tricks';
@@ -571,10 +574,8 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       if (state.gameType === 'rikiki') {
         if (field === 'bid') {
-          // Move from bid to tricks input of same player
           focusRikikiCell(currentRound, currentPlayer, 'tricks');
         } else {
-          // Move to next round's bid
           if (currentRound === state.rounds.length - 1) {
             appendEmptyRound(false);
           }
