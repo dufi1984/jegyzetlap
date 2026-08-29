@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kártyás Jegyzetlap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Main Notepad Area (Directly at top of screen) -->
+  <main class="viewport-container">
+    <div class="paper-container">
+      <div class="paper-sheet" id="paper-sheet">
+        <!-- Red vertical margin line on left (narrower distance) -->
+        <div class="red-margin"></div>
+
+        <!-- Scoreboard Table Container -->
+        <div class="table-wrapper">
+          <table class="score-table" id="score-table">
+            <thead>
+              <!-- Player Names Row -->
+              <tr id="player-headers-row">
+                <!-- Dynamically populated player headers -->
+              </tr>
+            </thead>
+            
+            <!-- Live Total Sticky Row (Toggleable) -->
+            <tbody id="total-tbody" class="total-tbody">
+              <tr id="total-row" class="total-row">
+                <!-- Dynamically populated total scores -->
+              </tr>
+            </tbody>
+
+            <!-- Score Entry Rounds (Fills screen) -->
+            <tbody id="rounds-tbody">
+              <!-- Dynamically populated round rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Actions (All controls at bottom, subtle design) -->
+  <footer class="app-footer">
+    <button id="add-player-btn" class="btn-subtle">
+      👤 Új játékos
+    </button>
+    <button id="toggle-sum-btn" class="btn-subtle">
+      Σ Összesítés: <span id="sum-status-text">BE</span>
+    </button>
+    <button id="reset-btn" class="btn-subtle btn-reset">
+      🔄 Új játék
+    </button>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
