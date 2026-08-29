@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v25';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v26';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -463,7 +463,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Start New Round / Új kör 🔄
-   * Focuses the first input cell below the separator line without selecting text!
+   * Simply draws the thick separator line and locks previous rows,
+   * without forcing cursor focus or opening the virtual keyboard!
    */
   function startNewSession() {
     let lastScoredRowIdx = -1;
@@ -489,11 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       saveState();
       renderTable();
-
-      // Focus the new round cell with blinking cursor, without selecting any text!
-      setTimeout(() => {
-        focusCell(state.lockedRowsCount, 0, false);
-      }, 50);
     }
   }
 
