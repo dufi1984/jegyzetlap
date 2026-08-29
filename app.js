@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v7';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v8';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   newSessionBtn.addEventListener('click', startNewSession);
   resetBtn.addEventListener('click', resetFullGame);
 
-  // Settings Modal Listeners
+  // Settings Modal Listeners (Instant auto-save, no page reload)
   settingsBtn.addEventListener('click', openSettingsModal);
   closeSettingsBtn.addEventListener('click', closeSettingsModal);
   settingsModal.addEventListener('click', (e) => {
@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.gameType = e.target.value;
     saveState();
     updateGameTypeUI();
+    renderHeaders(); // Re-render headers to show/hide bunkó badges
   });
 
   // Bunkó Modal Listeners
@@ -137,9 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Settings Modal Open / Close
-   */
   function openSettingsModal() {
     updateSettingsUI();
     settingsModal.classList.remove('is-hidden');

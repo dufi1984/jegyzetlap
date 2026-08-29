@@ -243,7 +243,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Footer Actions (Left Gear, Right Uniform White Icons)
+   Footer Actions (Left Gear, Right Action Buttons: Bunkó, Új menet, Új játékos)
    -------------------------------------------------------------------------- */
 .app-footer {
   height: 60px;
@@ -252,7 +252,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 14px;
   z-index: 100;
 }
 
@@ -260,40 +260,50 @@ body {
 .footer-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-/* Uniform Round Icon Buttons */
-.icon-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1px solid #475569;
+.btn-subtle {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--footer-text);
   background-color: #0f172a;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 8px 12px;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
   user-select: none;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-.icon-btn:hover {
+.btn-subtle:hover {
   background-color: #334155;
+  color: #ffffff;
   border-color: #64748b;
-  transform: translateY(-1px);
 }
 
-.icon-btn:active {
-  transform: scale(0.94);
+.btn-subtle:active {
+  transform: scale(0.96);
+}
+
+.icon-only-btn {
+  padding: 8px;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  justify-content: center;
 }
 
 .footer-icon {
-  width: 22px;
-  height: 22px;
-  color: #ffffff;
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 
 .bunko-btn-footer.is-hidden {
@@ -385,7 +395,7 @@ body {
 
 .custom-select {
   font-family: var(--font-sans);
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 600;
   padding: 8px 12px;
   border-radius: 8px;
@@ -553,16 +563,13 @@ input:checked + .slider:before {
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .app-footer {
-    padding: 0 10px;
+    padding: 0 8px;
     height: 56px;
   }
-  .icon-btn {
-    width: 40px;
-    height: 40px;
-  }
-  .footer-icon {
-    width: 20px;
-    height: 20px;
+  .btn-subtle {
+    font-size: 0.78rem;
+    padding: 6px 8px;
+    gap: 4px;
   }
   .player-name-input {
     font-size: 1rem;
