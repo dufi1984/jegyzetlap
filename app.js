@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v10';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v11';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -44,10 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const addPlayerBtn = document.getElementById('add-player-btn');
   const newSessionBtn = document.getElementById('new-session-btn');
 
-  // Settings Modal Elements
+  // Settings Popover Elements
   const settingsBtn = document.getElementById('settings-btn');
-  const settingsModal = document.getElementById('settings-modal');
-  const closeSettingsBtn = document.getElementById('close-settings-btn');
+  const settingsPopover = document.getElementById('settings-popover');
   const toggleSumCheckbox = document.getElementById('toggle-sum-checkbox');
   const gameTypeSelect = document.getElementById('game-type-select');
 
@@ -64,7 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7.5" fill="#1e293b"/></svg>`;
   const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="5" fill="#1e293b"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
-  // Helper: Checks if the game session has started (at least 1 score entered)
   function isGameStarted() {
     return state.rounds.some(round => round.some(val => val !== '' && val !== null && val !== undefined));
   }
@@ -77,11 +75,17 @@ document.addEventListener('DOMContentLoaded', () => {
   addPlayerBtn.addEventListener('click', addPlayer);
   newSessionBtn.addEventListener('click', startNewSession);
 
-  // Settings Modal Listeners (Instant auto-save, no page reload)
-  settingsBtn.addEventListener('click', openSettingsModal);
-  closeSettingsBtn.addEventListener('click', closeSettingsModal);
-  settingsModal.addEventListener('click', (e) => {
-    if (e.target === settingsModal) closeSettingsModal();
+  // Settings Popover Toggle
+  settingsBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    updateSettingsUI();
+    settingsPopover.classList.toggle('is-hidden');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!settingsPopover.contains(e.target) && e.target !== settingsBtn) {
+      settingsPopover.classList.add('is-hidden');
+    }
   });
 
   toggleSumCheckbox.addEventListener('change', (e) => {
@@ -94,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
     state.gameType = e.target.value;
     saveState();
     updateGameTypeUI();
-    renderHeaders(); // Re-render headers to show/hide bunkó badges
+    renderHeaders();
   });
 
   // Bunkó Modal Listeners
@@ -122,17 +126,11 @@ document.addEventListener('DOMContentLoaded', () => {
     updateGameTypeUI();
   }
 
-  /**
-   * Sync settings inputs with current state
-   */
   function updateSettingsUI() {
     toggleSumCheckbox.checked = state.showSum;
     gameTypeSelect.value = state.gameType || 'snapszer';
   }
 
-  /**
-   * Update Bunkó button visibility depending on Game Type
-   */
   function updateGameTypeUI() {
     if (state.gameType === 'snapszer') {
       bunkoModalBtn.classList.remove('is-hidden');
@@ -141,19 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function openSettingsModal() {
-    updateSettingsUI();
-    settingsModal.classList.remove('is-hidden');
-  }
-
-  function closeSettingsModal() {
-    settingsModal.classList.add('is-hidden');
-  }
-
   /**
    * Render Player Header Row
-   * Delete X button is ONLY visible BEFORE the game starts (no scores entered yet)
-   * Bunkó badges are pure static visual elements (non-clickable)
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
@@ -178,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
       input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
       innerDiv.appendChild(input);
 
-      // Bunkó Badges Row (Static visual badges on right side, non-clickable)
+      // Bunkó Badges Row (Clean transparent background, non-clickable)
       const bunkos = state.playerBunkos[index] || [];
       if (bunkos.length > 0 && state.gameType === 'snapszer') {
         const badgesRow = document.createElement('div');
@@ -196,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         innerDiv.appendChild(badgesRow);
       }
 
-      // Delete player X button (ONLY shown if game has NOT started yet!)
+      // Delete player X button (ONLY shown before game starts)
       if (canDelete) {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-player-btn';
@@ -214,9 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /**
-   * Render Totals Row
-   */
   function renderTotals() {
     totalRow.innerHTML = '';
     const totals = calculateTotals();
@@ -229,9 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /**
-   * Update Sum Row Visibility
-   */
   function updateSumVisibility() {
     if (state.showSum) {
       totalTbody.classList.remove('is-hidden');
@@ -240,9 +221,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Render Round Rows
-   */
   function renderRounds() {
     roundsTbody.innerHTML = '';
     state.rounds.forEach((roundData, roundIdx) => {
@@ -296,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
     saveState();
     renderTotals();
 
-    // Dynamically update headers if game started status toggles (hides delete X button immediately)
     if (isGameStarted() !== wasGameStarted) {
       renderHeaders();
     }

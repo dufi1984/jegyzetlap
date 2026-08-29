@@ -170,7 +170,7 @@ body {
   color: #ffffff;
 }
 
-/* Static Pure Visual Bunkó Badges on right side (non-clickable) */
+/* Static Pure Visual Bunkó Badges on right side (NO white background box!) */
 .player-badges-row {
   position: absolute;
   right: 4px;
@@ -181,9 +181,10 @@ body {
   gap: 2px;
   pointer-events: none; /* Pure visual element, non-clickable */
   z-index: 5;
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 2px 3px;
-  border-radius: 4px;
+  background: transparent; /* No white background pill */
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .player-badges-row.with-delete-btn {
@@ -251,7 +252,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Footer Actions
+   Footer Actions (Left Gear, Right Action Buttons: Bunkó, Új menet, Új játékos)
    -------------------------------------------------------------------------- */
 .app-footer {
   height: 60px;
@@ -319,8 +320,104 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Settings Modal & Controls
+   Settings Popover Menu (Bottom-left floating drawer menu above gear)
    -------------------------------------------------------------------------- */
+.settings-popover {
+  position: fixed;
+  bottom: 68px;
+  left: 14px;
+  width: 250px;
+  background-color: #1e293b;
+  color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+  padding: 14px 16px;
+  z-index: 250;
+  font-family: var(--font-sans);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.settings-popover.is-hidden {
+  display: none;
+}
+
+.popover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.popover-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.custom-popover-select {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  background-color: #0f172a;
+  color: #ffffff;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Toggle Switch Switcher */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .2s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #3b82f6;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* Bunkó Selectable List */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -334,7 +431,6 @@ body {
   justify-content: center;
   padding: 16px;
   z-index: 200;
-  transition: opacity 0.2s ease-in-out;
 }
 
 .modal-overlay.is-hidden {
@@ -387,80 +483,6 @@ body {
   gap: 16px;
 }
 
-/* Settings Items */
-.setting-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.setting-label {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.custom-select {
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  background-color: #f8fafc;
-  color: #0f172a;
-  outline: none;
-  cursor: pointer;
-}
-
-/* Toggle Switch Switcher */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 48px;
-  height: 26px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #cbd5e1;
-  transition: .2s;
-  border-radius: 26px;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 20px;
-  width: 20px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .2s;
-  border-radius: 50%;
-}
-
-input:checked + .slider {
-  background-color: #3b82f6;
-}
-
-input:checked + .slider:before {
-  transform: translateX(22px);
-}
-
-/* Bunkó Selectable List */
 .modal-player-selectable {
   background-color: #f8fafc;
   border: 2px solid #e2e8f0;

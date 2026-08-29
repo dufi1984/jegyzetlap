@@ -71,38 +71,22 @@
     </div>
   </footer>
 
-  <!-- Settings Modal (Fogaskerék menü - Tiszta beállítások gomb nélkül) -->
-  <div id="settings-modal" class="modal-overlay is-hidden">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2>⚙️ Beállítások</h2>
-        <button id="close-settings-btn" class="modal-close-btn">&times;</button>
-      </div>
-      <div class="modal-body settings-body">
-        
-        <!-- Game Type Selector -->
-        <div class="setting-item">
-          <label class="setting-label">Játék típusa</label>
-          <div class="setting-control">
-            <select id="game-type-select" class="custom-select">
-              <option value="snapszer">Snapszer</option>
-              <option value="general">Általános</option>
-            </select>
-          </div>
-        </div>
+  <!-- Settings Popover Menu (Floating popover above footer gear) -->
+  <div id="settings-popover" class="settings-popover is-hidden">
+    <div class="popover-item">
+      <label class="popover-label">Játék típusa</label>
+      <select id="game-type-select" class="custom-popover-select">
+        <option value="snapszer">Snapszer</option>
+        <option value="general">Általános</option>
+      </select>
+    </div>
 
-        <!-- Szumma sáv Toggle -->
-        <div class="setting-item">
-          <label class="setting-label" for="toggle-sum-checkbox">Szumma sáv</label>
-          <div class="setting-control">
-            <label class="switch">
-              <input type="checkbox" id="toggle-sum-checkbox">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-
-      </div>
+    <div class="popover-item">
+      <label class="popover-label" for="toggle-sum-checkbox">Szumma sáv</label>
+      <label class="switch">
+        <input type="checkbox" id="toggle-sum-checkbox">
+        <span class="slider"></span>
+      </label>
     </div>
   </div>
 
