@@ -198,21 +198,22 @@ body {
   pointer-events: none;
 }
 
-/* Sticky Total Score Row */
-.total-tbody {
+/* Live Total Sticky Bottom Row (Only active session sum, floats at bottom of table) */
+.total-tfoot {
   position: sticky;
-  top: 0;
-  z-index: 10;
+  bottom: 0;
+  z-index: 20;
 }
 
-.total-tbody.is-hidden {
+.total-tfoot.is-hidden {
   display: none;
 }
 
 .total-row {
   background-color: #f1f5f9;
-  border-bottom: 2px solid var(--text-dark) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  border-top: 2px solid #0f172a !important;
+  border-bottom: none !important;
+  box-shadow: 0 -3px 10px rgba(0, 0, 0, 0.08);
 }
 
 .total-cell {

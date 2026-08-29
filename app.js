@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v26';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v27';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // DOM Elements
   const playerHeadersRow = document.getElementById('player-headers-row');
-  const totalTbody = document.getElementById('total-tbody');
+  const totalTfoot = document.getElementById('total-tfoot');
   const totalRow = document.getElementById('total-row');
   const roundsTbody = document.getElementById('rounds-tbody');
   
@@ -218,10 +218,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateSumVisibility() {
-    if (state.showSum) {
-      totalTbody.classList.remove('is-hidden');
-    } else {
-      totalTbody.classList.add('is-hidden');
+    if (totalTfoot) {
+      if (state.showSum) {
+        totalTfoot.classList.remove('is-hidden');
+      } else {
+        totalTfoot.classList.add('is-hidden');
+      }
     }
   }
 
@@ -348,17 +350,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Calculate totals exclusively for the ACTIVE session/round (from lockedRowsCount to end)
+   */
   function calculateTotals() {
+    const startRowIdx = state.lockedRowsCount || 0;
     return state.players.map((_, playerIdx) => {
       let sum = 0;
       let hasValue = false;
-      state.rounds.forEach(round => {
-        const val = round[playerIdx];
+      for (let r = startRowIdx; r < state.rounds.length; r++) {
+        const val = state.rounds[r][playerIdx];
         if (val !== '' && val !== null && val !== undefined && !isNaN(Number(val))) {
           sum += Number(val);
           hasValue = true;
         }
-      });
+      }
       return hasValue ? sum : 0;
     });
   }
@@ -463,8 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Start New Round / Új kör 🔄
-   * Simply draws the thick separator line and locks previous rows,
-   * without forcing cursor focus or opening the virtual keyboard!
+   * Draws separator line, locks previous round, and resets active round sum
    */
   function startNewSession() {
     let lastScoredRowIdx = -1;
