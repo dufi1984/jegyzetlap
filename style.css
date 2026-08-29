@@ -91,22 +91,22 @@ body {
 
 .score-table th, 
 .score-table td {
-  padding: 0 4px;
+  padding: 0 2px;
   text-align: center;
   position: relative;
   vertical-align: middle;
 }
 
-/* Player Column Headers (Taller header for names + bunkós under names) */
+/* Player Column Headers */
 .score-table thead tr {
-  height: 60px;
+  height: 54px;
   background-color: #f8fafc;
   border-bottom: 2px solid #0f172a;
 }
 
 .player-header {
   position: relative;
-  padding: 4px 2px;
+  padding: 2px 0;
 }
 
 .player-header-inner {
@@ -117,7 +117,7 @@ body {
   justify-content: center;
   width: 100%;
   height: 100%;
-  gap: 2px;
+  gap: 0;
 }
 
 .player-name-input {
@@ -130,7 +130,8 @@ body {
   border: 1px dashed transparent;
   border-radius: 4px;
   width: 100%;
-  padding: 2px;
+  padding: 0;
+  margin: 0;
   outline: none;
   transition: all 0.15s;
 }
@@ -144,8 +145,8 @@ body {
 /* Touch-friendly Player Delete X Button (Top Right, only before game starts) */
 .remove-player-btn {
   position: absolute;
-  right: 2px;
-  top: 2px;
+  right: 1px;
+  top: 1px;
   width: 22px;
   height: 22px;
   border-radius: 50%;
@@ -171,19 +172,20 @@ body {
   color: #ffffff;
 }
 
-/* Bunkó Badges displayed directly UNDER player name */
+/* Bunkó Badges displayed directly tight UNDER player name */
 .player-badges-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 16px;
+  min-height: 15px;
+  margin-top: -1px;
   pointer-events: none;
 }
 
 .bunko-icon {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   display: inline-block;
   vertical-align: middle;
   pointer-events: none;
