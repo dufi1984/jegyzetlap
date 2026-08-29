@@ -591,6 +591,18 @@ body.dark-theme .rikiki-score-display.is-negative {
   border-color: #3b82f6;
 }
 
+.btn-new-round:disabled,
+.btn-new-round.is-disabled {
+  opacity: 0.38 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #64748b !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
 .btn-new-round.is-hidden {
   display: none;
 }

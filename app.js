@@ -141,6 +141,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
+   * Checks if there are any scores entered in the active session (after the last underline).
+   * If nothing was entered/modified after the underline, closing a round is disabled!
+   */
+  function canCloseRound() {
+    if (state.pendingBunko) return false;
+    for (let r = state.lockedRowsCount; r < state.rounds.length; r++) {
+      const hasContent = state.rounds[r].some(val => {
+        if (val === null || val === undefined) return false;
+        if (typeof val === 'object') return val.score !== '' || val.bid !== '' || val.tricks !== '';
+        return val !== '';
+      });
+      if (hasContent) return true;
+    }
+    return false;
+  }
+
+  /**
    * Helper for Fekete macska: finds the highest round index that should be unlocked.
    */
   function getFirstIncompleteRoundIndex() {
@@ -338,6 +355,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Kör vége button is visible in Snapszer & General
     if (state.gameType === 'snapszer' || state.gameType === 'general') {
       newSessionBtn.classList.remove('is-hidden');
+      const isAllowedToClose = canCloseRound();
+      newSessionBtn.disabled = !isAllowedToClose;
+      if (isAllowedToClose) {
+        newSessionBtn.classList.remove('is-disabled');
+      } else {
+        newSessionBtn.classList.add('is-disabled');
+      }
     } else {
       newSessionBtn.classList.add('is-hidden');
     }
@@ -704,6 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveState();
     renderTotals();
+    updateGameTypeUI();
 
     if (isGameStarted() !== wasGameStarted) {
       renderHeaders();
@@ -946,6 +971,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    if (!canCloseRound()) {
+      return;
+    }
+
     let lastScoredRowIdx = -1;
     for (let r = state.rounds.length - 1; r >= 0; r--) {
       const hasContent = state.rounds[r].some(val => {
@@ -959,7 +988,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    if (lastScoredRowIdx >= 0) {
+    if (lastScoredRowIdx >= 0 && lastScoredRowIdx >= state.lockedRowsCount) {
       if (!state.separatorRowIndices.includes(lastScoredRowIdx)) {
         state.separatorRowIndices.push(lastScoredRowIdx);
       }
