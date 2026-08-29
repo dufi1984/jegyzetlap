@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v27';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v28';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -37,8 +37,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // DOM Elements
+  const paperSheet = document.getElementById('paper-sheet');
+  const tableWrapper = document.getElementById('table-wrapper');
   const playerHeadersRow = document.getElementById('player-headers-row');
-  const totalTfoot = document.getElementById('total-tfoot');
+  const totalBottomBar = document.getElementById('total-bottom-bar');
+  const totalPaperContainer = document.getElementById('total-paper-container');
   const totalRow = document.getElementById('total-row');
   const roundsTbody = document.getElementById('rounds-tbody');
   
@@ -68,6 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function isGameStarted() {
     return state.rounds.some(round => round.some(val => val !== '' && val !== null && val !== undefined));
+  }
+
+  // Synchronize horizontal scrolling between table wrapper and bottom sum bar
+  if (tableWrapper && totalPaperContainer) {
+    tableWrapper.addEventListener('scroll', () => {
+      totalPaperContainer.scrollLeft = tableWrapper.scrollLeft;
+    });
   }
 
   // Initialize UI
@@ -218,11 +228,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateSumVisibility() {
-    if (totalTfoot) {
+    if (totalBottomBar) {
       if (state.showSum) {
-        totalTfoot.classList.remove('is-hidden');
+        totalBottomBar.classList.remove('is-hidden');
+        if (paperSheet) paperSheet.classList.add('has-bottom-sum');
       } else {
-        totalTfoot.classList.add('is-hidden');
+        totalBottomBar.classList.add('is-hidden');
+        if (paperSheet) paperSheet.classList.remove('has-bottom-sum');
       }
     }
   }
@@ -469,7 +481,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Start New Round / Új kör 🔄
-   * Draws separator line, locks previous round, and resets active round sum
    */
   function startNewSession() {
     let lastScoredRowIdx = -1;

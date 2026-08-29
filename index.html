@@ -17,7 +17,7 @@
       <div class="paper-sheet" id="paper-sheet">
 
         <!-- Scoreboard Table Container -->
-        <div class="table-wrapper">
+        <div class="table-wrapper" id="table-wrapper">
           <table class="score-table" id="score-table">
             <thead>
               <!-- Player Names Row -->
@@ -30,19 +30,23 @@
             <tbody id="rounds-tbody">
               <!-- Dynamically populated round rows -->
             </tbody>
-
-            <!-- Live Total Sticky Bottom Row (Only active round sum, disabled by default) -->
-            <tfoot id="total-tfoot" class="total-tfoot is-hidden">
-              <tr id="total-row" class="total-row">
-                <!-- Dynamically populated total scores -->
-              </tr>
-            </tfoot>
           </table>
         </div>
 
       </div>
     </div>
   </main>
+
+  <!-- Live Total Sticky Bottom Bar (Docked above footer, expands upward smoothly) -->
+  <div id="total-bottom-bar" class="total-bottom-bar is-hidden">
+    <div class="total-paper-container" id="total-paper-container">
+      <table class="total-bottom-table">
+        <tr id="total-row" class="total-row">
+          <!-- Dynamically populated total scores -->
+        </tr>
+      </table>
+    </div>
+  </div>
 
   <!-- Footer Toolbar -->
   <footer class="app-footer">
