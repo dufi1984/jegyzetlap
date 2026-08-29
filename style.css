@@ -127,7 +127,7 @@ body {
   background: transparent;
   border: 1px dashed transparent;
   border-radius: 4px;
-  width: calc(100% - 28px);
+  width: calc(100% - 24px);
   padding: 2px;
   outline: none;
   transition: all 0.15s;
@@ -139,7 +139,7 @@ body {
   border-color: #94a3b8;
 }
 
-/* Touch-friendly Player Delete X Button on the RIGHT side of header cell */
+/* Touch-friendly Player Delete X Button (Only shown BEFORE game starts) */
 .remove-player-btn {
   position: absolute;
   right: 3px;
@@ -170,25 +170,24 @@ body {
   color: #ffffff;
 }
 
-/* Floating Bunkó Badges on right side (offset left if delete button exists) */
+/* Static Pure Visual Bunkó Badges on right side (non-clickable) */
 .player-badges-row {
   position: absolute;
-  right: 30px; /* Placed cleanly to the left of the right-aligned delete button */
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   gap: 2px;
-  cursor: pointer;
+  pointer-events: none; /* Pure visual element, non-clickable */
   z-index: 5;
   background-color: rgba(255, 255, 255, 0.9);
   padding: 2px 3px;
   border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.player-badges-row.no-delete-btn {
-  right: 4px;
+.player-badges-row.with-delete-btn {
+  right: 30px;
 }
 
 .bunko-icon {
@@ -196,11 +195,7 @@ body {
   height: 15px;
   display: inline-block;
   vertical-align: middle;
-  transition: transform 0.15s;
-}
-
-.bunko-icon:hover {
-  transform: scale(1.25);
+  pointer-events: none;
 }
 
 /* Sticky Total Score Row */
@@ -256,7 +251,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Footer Actions (Left Gear, Right Action Buttons: Bunkó, Új menet, Új játékos)
+   Footer Actions
    -------------------------------------------------------------------------- */
 .app-footer {
   height: 60px;

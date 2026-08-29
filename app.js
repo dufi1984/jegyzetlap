@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v9';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v10';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -63,6 +63,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // SVG Generators for Bunkó icons
   const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7.5" fill="#1e293b"/></svg>`;
   const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="5" fill="#1e293b"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+
+  // Helper: Checks if the game session has started (at least 1 score entered)
+  function isGameStarted() {
+    return state.rounds.some(round => round.some(val => val !== '' && val !== null && val !== undefined));
+  }
 
   // Initialize UI
   renderTable();
@@ -146,12 +151,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Render Player Header Row with Right-Aligned Delete Button & Floating Bunkó Badges
+   * Render Player Header Row
+   * Delete X button is ONLY visible BEFORE the game starts (no scores entered yet)
+   * Bunkó badges are pure static visual elements (non-clickable)
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
 
-    const hasDeleteBtn = state.players.length > 2;
+    const gameStarted = isGameStarted();
+    const canDelete = !gameStarted && state.players.length > 2;
 
     state.players.forEach((playerName, index) => {
       const th = document.createElement('th');
@@ -170,16 +178,14 @@ document.addEventListener('DOMContentLoaded', () => {
       input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
       innerDiv.appendChild(input);
 
-      // Bunkó Badges Row (floating on right side, offset left if delete button exists)
+      // Bunkó Badges Row (Static visual badges on right side, non-clickable)
       const bunkos = state.playerBunkos[index] || [];
       if (bunkos.length > 0 && state.gameType === 'snapszer') {
         const badgesRow = document.createElement('div');
         badgesRow.className = 'player-badges-row';
-        if (!hasDeleteBtn) {
-          badgesRow.classList.add('no-delete-btn');
+        if (canDelete) {
+          badgesRow.classList.add('with-delete-btn');
         }
-        badgesRow.title = 'Kattints ide a Bunkók kezeléséhez!';
-        badgesRow.addEventListener('click', openBunkoModal);
 
         bunkos.forEach(type => {
           const span = document.createElement('span');
@@ -190,12 +196,12 @@ document.addEventListener('DOMContentLoaded', () => {
         innerDiv.appendChild(badgesRow);
       }
 
-      // Touch-friendly Remove player button on the RIGHT side
-      if (hasDeleteBtn) {
+      // Delete player X button (ONLY shown if game has NOT started yet!)
+      if (canDelete) {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-player-btn';
         removeBtn.innerHTML = '✕';
-        removeBtn.title = 'Játékos törlése';
+        removeBtn.title = 'Játékos törlése (csak a pontbeírás előtt)';
         removeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           removePlayer(index);
@@ -277,6 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const roundIdx = parseInt(input.dataset.roundIndex, 10);
     const playerIdx = parseInt(input.dataset.playerIndex, 10);
 
+    const wasGameStarted = isGameStarted();
+
     let val = input.value.trim();
     if (val !== '' && val !== '-' && isNaN(Number(val))) {
       const cleaned = val.replace(/[^0-9.-]/g, '');
@@ -287,6 +295,11 @@ document.addEventListener('DOMContentLoaded', () => {
     state.rounds[roundIdx][playerIdx] = val;
     saveState();
     renderTotals();
+
+    // Dynamically update headers if game started status toggles (hides delete X button immediately)
+    if (isGameStarted() !== wasGameStarted) {
+      renderHeaders();
+    }
   }
 
   function handleCellKeyDown(e) {
@@ -360,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function removePlayer(playerIdx) {
-    if (state.players.length <= 2) return;
+    if (state.players.length <= 2 || isGameStarted()) return;
     state.players.splice(playerIdx, 1);
     state.playerBunkos.splice(playerIdx, 1);
     state.rounds.forEach(round => round.splice(playerIdx, 1));
