@@ -43,35 +43,43 @@
     </div>
   </main>
 
-  <!-- Footer Toolbar (Left: Gear, Right: Bunkó, Új menet, Új játékos) -->
+  <!-- Footer Toolbar -->
   <footer class="app-footer">
-    <!-- Left: Settings Gear -->
+    <!-- Left: Gear + Add User Icon Button -->
     <div class="footer-left">
+      <!-- Settings Gear -->
       <button id="settings-btn" class="btn-subtle icon-only-btn" title="Beállítások">
         <svg viewBox="0 0 24 24" class="footer-icon"><path fill="currentColor" d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 3h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.63c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/></svg>
       </button>
+      
+      <!-- Add User (Icon only, next to gear) -->
+      <button id="add-player-btn" class="btn-subtle icon-only-btn" title="Új játékos hozzáadása">
+        <svg viewBox="0 0 24 24" class="footer-icon"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/><line x1="19" y1="11" x2="19" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="14" x2="22" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
     </div>
 
-    <!-- Right: Action Buttons with Text Labels (Bunkó, Új menet, Új játékos) -->
+    <!-- Right: Bunkó, Új kör (refresh icon on right), Új játék (+ icon on right) -->
     <div class="footer-right">
-      <!-- 1. Bunkó button (Shown in Snapszer mode, leftmost of 3) -->
+      <!-- 1. Bunkó button (Shown in Snapszer mode) -->
       <button id="bunko-modal-btn" class="btn-subtle bunko-btn-footer" title="Bunkó kiosztása">
         ⚫ Bunkó
       </button>
 
-      <!-- 2. Új menet (Middle button) -->
-      <button id="new-session-btn" class="btn-subtle" title="Új menet (Pontok törlése)">
-        🔄 Új menet
+      <!-- 2. Új kör (Refresh icon on right) -->
+      <button id="new-session-btn" class="btn-subtle" title="Új kör (Pontok törlése, bunkók megmaradnak)">
+        Új kör
+        <svg viewBox="0 0 24 24" class="footer-icon icon-right"><path fill="currentColor" d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35Z"/></svg>
       </button>
 
-      <!-- 3. Új játékos (Rightmost button) -->
-      <button id="add-player-btn" class="btn-subtle" title="Új játékos hozzáadása">
-        ➕ Új játékos
+      <!-- 3. Új játék (+ icon on right, resets table except names) -->
+      <button id="reset-table-btn" class="btn-subtle" title="Új játék (Tábla és bunkók törlése, nevek megmaradnak)">
+        Új játék
+        <svg viewBox="0 0 24 24" class="footer-icon icon-right"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2Z"/></svg>
       </button>
     </div>
   </footer>
 
-  <!-- Settings Popover Menu (Floating popover above footer gear) -->
+  <!-- Settings Popover Menu (Bottom-left floating drawer menu above gear) -->
   <div id="settings-popover" class="settings-popover is-hidden">
     <div class="popover-item">
       <label class="popover-label">Játék típusa</label>

@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v11';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v12';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const addPlayerBtn = document.getElementById('add-player-btn');
   const newSessionBtn = document.getElementById('new-session-btn');
+  const resetTableBtn = document.getElementById('reset-table-btn');
 
   // Settings Popover Elements
   const settingsBtn = document.getElementById('settings-btn');
@@ -74,6 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Main Event Listeners
   addPlayerBtn.addEventListener('click', addPlayer);
   newSessionBtn.addEventListener('click', startNewSession);
+  if (resetTableBtn) {
+    resetTableBtn.addEventListener('click', resetTableKeepNames);
+  }
 
   // Settings Popover Toggle
   settingsBtn.addEventListener('click', (e) => {
@@ -165,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
       input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
       innerDiv.appendChild(input);
 
-      // Bunkó Badges Row (Clean transparent background, non-clickable)
+      // Bunkó Badges Row (Static visual badges)
       const bunkos = state.playerBunkos[index] || [];
       if (bunkos.length > 0 && state.gameType === 'snapszer') {
         const badgesRow = document.createElement('div');
@@ -447,12 +451,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Start New Session (Clears score table inputs, PRESERVES player bunkós and names)
+   * Start New Session / Kör (Clears score table inputs, PRESERVES player bunkós and names)
    */
   function startNewSession() {
-    if (confirm('Új menet indítása: A rögzített pontok törlődnek az új fordulóhoz, de a játékosok BUNKÓI megmaradnak. Folytatod?')) {
+    if (confirm('Új kör indítása: A rögzített pontok törlődnek az új körhöz, de a játékosok BUNKÓI megmaradnak. Folytatod?')) {
       const rowCount = calculateScreenRoundsCount();
       state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
+      saveState();
+      renderTable();
+    }
+  }
+
+  /**
+   * Reset Table / Új játék (Clears score inputs AND bunkós, PRESERVES player names)
+   */
+  function resetTableKeepNames() {
+    if (confirm('Új játék: A ponttáblázat és a BUNKÓK törlődnek, de a játékosok nevei megmaradnak. Folytatod?')) {
+      const rowCount = calculateScreenRoundsCount();
+      state.rounds = Array.from({ length: roundCount }, () => state.players.map(() => ''));
+      state.playerBunkos = state.players.map(() => []);
       saveState();
       renderTable();
     }

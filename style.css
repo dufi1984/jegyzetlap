@@ -170,7 +170,7 @@ body {
   color: #ffffff;
 }
 
-/* Static Pure Visual Bunkó Badges on right side (NO white background box!) */
+/* Static Pure Visual Bunkó Badges on right side */
 .player-badges-row {
   position: absolute;
   right: 4px;
@@ -179,9 +179,9 @@ body {
   display: flex;
   align-items: center;
   gap: 2px;
-  pointer-events: none; /* Pure visual element, non-clickable */
+  pointer-events: none;
   z-index: 5;
-  background: transparent; /* No white background pill */
+  background: transparent;
   padding: 0;
   border-radius: 0;
   box-shadow: none;
@@ -252,7 +252,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Footer Actions (Left Gear, Right Action Buttons: Bunkó, Új menet, Új játékos)
+   Footer Actions (Left: Gear + Add User Icon, Right: Bunkó, Új kör 🔄, Új játék ➕)
    -------------------------------------------------------------------------- */
 .app-footer {
   height: 60px;
@@ -315,12 +315,16 @@ body {
   fill: currentColor;
 }
 
+.icon-right {
+  margin-left: 2px;
+}
+
 .bunko-btn-footer.is-hidden {
   display: none;
 }
 
 /* --------------------------------------------------------------------------
-   Settings Popover Menu (Bottom-left floating drawer menu above gear)
+   Settings Popover Menu
    -------------------------------------------------------------------------- */
 .settings-popover {
   position: fixed;
@@ -570,13 +574,26 @@ input:checked + .slider:before {
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .app-footer {
-    padding: 0 8px;
+    padding: 0 6px;
     height: 56px;
+  }
+  .footer-left,
+  .footer-right {
+    gap: 6px;
   }
   .btn-subtle {
     font-size: 0.78rem;
     padding: 6px 8px;
-    gap: 4px;
+    gap: 3px;
+  }
+  .icon-only-btn {
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+  }
+  .footer-icon {
+    width: 18px;
+    height: 18px;
   }
   .player-name-input {
     font-size: 1rem;
