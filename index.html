@@ -39,6 +39,11 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Full-Screen Digital Touchpad Canvas Overlay for Handwriting Recognition -->
+        <canvas id="handwriting-canvas" class="handwriting-canvas is-hidden"></canvas>
+        <div id="recognition-toast" class="recognition-toast is-hidden"></div>
+
       </div>
     </div>
   </main>
@@ -97,6 +102,14 @@
       <label class="popover-label" for="toggle-sum-checkbox">Szumma sáv</label>
       <label class="switch">
         <input type="checkbox" id="toggle-sum-checkbox">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="popover-item">
+      <label class="popover-label" for="toggle-handwriting-checkbox">Kézírásos Touchpad</label>
+      <label class="switch">
+        <input type="checkbox" id="toggle-handwriting-checkbox">
         <span class="slider"></span>
       </label>
     </div>
