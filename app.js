@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v12';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v13';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -451,28 +451,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Start New Session / Kör (Clears score table inputs, PRESERVES player bunkós and names)
+   * Start New Round / Új kör
+   * Instant reset of score inputs without confirmation dialog.
+   * PRESERVES player bunkós and player names!
    */
   function startNewSession() {
-    if (confirm('Új kör indítása: A rögzített pontok törlődnek az új körhöz, de a játékosok BUNKÓI megmaradnak. Folytatod?')) {
-      const rowCount = calculateScreenRoundsCount();
-      state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
-      saveState();
-      renderTable();
-    }
+    const rowCount = calculateScreenRoundsCount();
+    state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
+    saveState();
+    renderTable();
   }
 
   /**
-   * Reset Table / Új játék (Clears score inputs AND bunkós, PRESERVES player names)
+   * Start New Game / Új játék
+   * Instant reset of score inputs AND bunkós without confirmation dialog.
+   * PRESERVES player names!
    */
   function resetTableKeepNames() {
-    if (confirm('Új játék: A ponttáblázat és a BUNKÓK törlődnek, de a játékosok nevei megmaradnak. Folytatod?')) {
-      const rowCount = calculateScreenRoundsCount();
-      state.rounds = Array.from({ length: roundCount }, () => state.players.map(() => ''));
-      state.playerBunkos = state.players.map(() => []);
-      saveState();
-      renderTable();
-    }
+    const rowCount = calculateScreenRoundsCount();
+    state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
+    state.playerBunkos = state.players.map(() => []);
+    saveState();
+    renderTable();
   }
 
   function saveState() {
