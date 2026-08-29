@@ -15,7 +15,7 @@
   --footer-bg: #1e293b;
   --footer-text: #cbd5e1;
   
-  --row-height: 44px;
+  --row-height: 46px;
 }
 
 * {
@@ -170,26 +170,26 @@ body {
 
 .total-row {
   background-color: #f1f5f9;
-  font-size: 1.25rem;
-  font-weight: 700;
   border-bottom: 2px solid var(--text-dark) !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
 .total-cell {
   color: #0f172a;
-  font-weight: 700;
-  padding: 8px 2px;
+  font-size: 1.45rem;
+  font-weight: 900; /* Extra bold sum */
+  padding: 6px 2px;
   user-select: none;
+  letter-spacing: -0.02em;
 }
 
-/* Score Cells & Inputs */
+/* Score Cells & Inputs (Larger, prominent font size) */
 .score-input {
   width: 100%;
-  height: 38px;
+  height: 40px;
   font-family: var(--font-serif);
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: 1.45rem; /* Larger, clearly readable numbers */
+  font-weight: 700;
   text-align: center;
   color: #0f172a;
   background: transparent;
@@ -269,6 +269,9 @@ body {
     font-size: 1rem;
   }
   .score-input {
-    font-size: 1.1rem;
+    font-size: 1.35rem;
+  }
+  .total-cell {
+    font-size: 1.35rem;
   }
 }
