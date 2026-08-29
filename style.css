@@ -60,7 +60,7 @@ body {
 .paper-sheet {
   position: relative;
   background-color: var(--paper-bg);
-  min-height: calc(100vh - 54px); /* Full screen height minus footer */
+  min-height: calc(100vh - 60px);
   box-shadow: var(--paper-shadow);
   overflow: hidden;
   border-left: 1px solid #e2e8f0;
@@ -79,12 +79,11 @@ body {
 .score-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed; /* Equal width distribution among all player columns */
+  table-layout: fixed;
   position: relative;
   font-family: var(--font-serif);
 }
 
-/* Horizontal ruled lines on all rows */
 .score-table tr {
   height: var(--row-height);
   border-bottom: 1px solid var(--line-blue);
@@ -128,7 +127,7 @@ body {
   background: transparent;
   border: 1px dashed transparent;
   border-radius: 4px;
-  width: calc(100% - 24px); /* Leave room for floating bunkó badges */
+  width: calc(100% - 24px);
   padding: 2px;
   outline: none;
   transition: all 0.15s;
@@ -162,7 +161,7 @@ body {
   color: #ef4444;
 }
 
-/* Floating Bunkó Badges on the right edge of header cell */
+/* Floating Bunkó Badges on right edge */
 .player-badges-row {
   position: absolute;
   right: 4px;
@@ -244,53 +243,65 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Footer Actions
+   Footer Actions (Left Gear, Right Uniform White Icons)
    -------------------------------------------------------------------------- */
 .app-footer {
-  height: 54px;
+  height: 60px;
   background-color: var(--footer-bg);
   border-top: 1px solid #334155;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
-  gap: 4px;
+  padding: 0 16px;
   z-index: 100;
 }
 
-.btn-subtle {
-  font-family: var(--font-sans);
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--footer-text);
-  background: transparent;
+.footer-left,
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Uniform Round Icon Buttons */
+.icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   border: 1px solid #475569;
-  border-radius: 6px;
-  padding: 6px 10px;
+  background-color: #0f172a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: all 0.15s ease-in-out;
   user-select: none;
-  white-space: nowrap;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.btn-subtle:hover {
+.icon-btn:hover {
   background-color: #334155;
-  color: #ffffff;
   border-color: #64748b;
+  transform: translateY(-1px);
 }
 
-.btn-subtle:active {
-  transform: scale(0.97);
+.icon-btn:active {
+  transform: scale(0.94);
 }
 
-.btn-subtle.active {
-  background-color: #3b82f6;
+.footer-icon {
+  width: 22px;
+  height: 22px;
   color: #ffffff;
-  border-color: #3b82f6;
+}
+
+.bunko-btn-footer.is-hidden {
+  display: none;
 }
 
 /* --------------------------------------------------------------------------
-   Bunkó Selection Modal (Simplified & Tap-Friendly)
+   Settings Modal & Controls
    -------------------------------------------------------------------------- */
 .modal-overlay {
   position: fixed;
@@ -350,15 +361,111 @@ body {
 }
 
 .modal-body {
-  padding: 16px;
-  max-height: 60vh;
+  padding: 20px 18px;
+  max-height: 70vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
-/* Selectable Player Row Card */
+/* Settings Items */
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.setting-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.custom-select {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #0f172a;
+  outline: none;
+  cursor: pointer;
+}
+
+.setting-divider {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 4px 0;
+}
+
+.btn-danger-setting {
+  width: 100%;
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-danger-setting:hover {
+  background-color: #fee2e2;
+}
+
+/* Toggle Switch Switcher */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .2s;
+  border-radius: 26px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #3b82f6;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Bunkó Selectable List */
 .modal-player-selectable {
   background-color: #f8fafc;
   border: 2px solid #e2e8f0;
@@ -411,11 +518,6 @@ body {
   color: #ffffff;
 }
 
-.modal-player-check-icon::after {
-  content: '';
-  display: none;
-}
-
 .modal-player-selectable.is-selected .modal-player-check-icon::after {
   content: '✓';
   display: block;
@@ -441,26 +543,26 @@ body {
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background-color 0.15s, transform 0.1s;
+  transition: background-color 0.15s, transform 0.10s;
 }
 
 .btn-confirm-bunko:hover {
   background-color: #0f172a;
 }
 
-.btn-confirm-bunko:active {
-  transform: scale(0.98);
-}
-
 /* Responsive adjustments */
 @media (max-width: 480px) {
   .app-footer {
-    padding: 0 4px;
-    height: 50px;
+    padding: 0 10px;
+    height: 56px;
   }
-  .btn-subtle {
-    font-size: 0.75rem;
-    padding: 5px 6px;
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .footer-icon {
+    width: 20px;
+    height: 20px;
   }
   .player-name-input {
     font-size: 1rem;

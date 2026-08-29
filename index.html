@@ -43,31 +43,85 @@
     </div>
   </main>
 
-  <!-- Footer Actions (Clean, subtle bottom toolbar) -->
+  <!-- Footer Toolbar (Left: Gear, Right: Action Icon Buttons) -->
   <footer class="app-footer">
-    <button id="add-player-btn" class="btn-subtle" title="Új játékos oszlop">
-      👤 Új játékos
-    </button>
-    <button id="bunko-modal-btn" class="btn-subtle" title="Bunkó kiosztása">
-      ⚫ Bunkó
-    </button>
-    <button id="new-session-btn" class="btn-subtle" title="Pontok törlése a következő menethez (bunkók megmaradnak)">
-      🧹 Új menet
-    </button>
-    <button id="toggle-sum-btn" class="btn-subtle">
-      Σ Szumma: <span id="sum-status-text">KI</span>
-    </button>
-    <button id="reset-btn" class="btn-subtle btn-reset" title="Minden pont és bunkó törlése">
-      🔄 Új játék
-    </button>
+    <!-- Left: Settings Gear -->
+    <div class="footer-left">
+      <button id="settings-btn" class="icon-btn" title="Beállítások">
+        <svg viewBox="0 0 24 24" class="footer-icon"><path fill="currentColor" d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 3h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.63c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/></svg>
+      </button>
+    </div>
+
+    <!-- Right: Uniform Action Icons -->
+    <div class="footer-right">
+      <!-- Add Player (+ icon) -->
+      <button id="add-player-btn" class="icon-btn" title="Új játékos hozzáadása">
+        <svg viewBox="0 0 24 24" class="footer-icon"><path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2Z"/></svg>
+      </button>
+
+      <!-- Refresh / Új menet (Refresh icon) -->
+      <button id="new-session-btn" class="icon-btn" title="Új menet (Pontok törlése)">
+        <svg viewBox="0 0 24 24" class="footer-icon"><path fill="currentColor" d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35Z"/></svg>
+      </button>
+
+      <!-- Bunkó button (Shown in Snapszer mode) -->
+      <button id="bunko-modal-btn" class="icon-btn bunko-btn-footer" title="Bunkó kiosztása">
+        <svg viewBox="0 0 24 24" class="footer-icon"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>
+      </button>
+    </div>
   </footer>
+
+  <!-- Settings Modal (Fogaskerék menü) -->
+  <div id="settings-modal" class="modal-overlay is-hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>⚙️ Beállítások</h2>
+        <button id="close-settings-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body settings-body">
+        
+        <!-- Game Type Selector -->
+        <div class="setting-item">
+          <label class="setting-label">Játék típusa</label>
+          <div class="setting-control">
+            <select id="game-type-select" class="custom-select">
+              <option value="snapszer">♠️ Snapszer (Bunkó gombbal)</option>
+              <option value="general">🃏 Általános kártyajáték</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Szumma sáv Toggle -->
+        <div class="setting-item">
+          <label class="setting-label" for="toggle-sum-checkbox">Szumma sáv megjelenítése</label>
+          <div class="setting-control">
+            <label class="switch">
+              <input type="checkbox" id="toggle-sum-checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <hr class="setting-divider">
+
+        <!-- Full Reset Game -->
+        <div class="setting-item">
+          <button id="reset-btn" class="btn-danger-setting">
+            🔄 Új teljes játék indítása
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <!-- Simple Bunkó Selection Modal -->
   <div id="bunko-modal" class="modal-overlay is-hidden">
     <div class="modal-card">
       <div class="modal-header">
         <h2>Ki kapta a bunkót?</h2>
-        <button id="close-modal-btn" class="modal-close-btn">&times;</button>
+        <button id="close-bunko-btn" class="modal-close-btn">&times;</button>
       </div>
       <div class="modal-body" id="bunko-modal-list">
         <!-- Dynamically populated list of player selectable rows -->

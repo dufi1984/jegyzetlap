@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v6';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v7';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -16,12 +16,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let state = loadState() || {
     players: ['Név 1', 'Név 2', 'Név 3', 'Név 4'],
     playerBunkos: [[], [], [], []],
+    gameType: 'snapszer', // 'snapszer' or 'general'
     showSum: false,
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
   };
 
   if (!state.playerBunkos || state.playerBunkos.length !== state.players.length) {
     state.playerBunkos = state.players.map((_, i) => state.playerBunkos?.[i] || []);
+  }
+
+  if (!state.gameType) {
+    state.gameType = 'snapszer';
   }
 
   if (state.rounds.length < initialRowCount) {
@@ -38,35 +43,59 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const addPlayerBtn = document.getElementById('add-player-btn');
   const newSessionBtn = document.getElementById('new-session-btn');
-  const toggleSumBtn = document.getElementById('toggle-sum-btn');
-  const sumStatusText = document.getElementById('sum-status-text');
   const resetBtn = document.getElementById('reset-btn');
 
-  // Modal Elements
+  // Settings Modal Elements
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsModal = document.getElementById('settings-modal');
+  const closeSettingsBtn = document.getElementById('close-settings-btn');
+  const toggleSumCheckbox = document.getElementById('toggle-sum-checkbox');
+  const gameTypeSelect = document.getElementById('game-type-select');
+
+  // Bunkó Modal Elements
   const bunkoModalBtn = document.getElementById('bunko-modal-btn');
   const bunkoModal = document.getElementById('bunko-modal');
-  const closeModalBtn = document.getElementById('close-modal-btn');
+  const closeBunkoBtn = document.getElementById('close-bunko-btn');
   const bunkoModalList = document.getElementById('bunko-modal-list');
   const confirmBunkoBtn = document.getElementById('confirm-bunko-btn');
 
-  // Selected player indices in modal
   let selectedPlayerIndices = new Set();
 
-  // SVG Generators for Sima Bunkó and Szőrös Bunkó
+  // SVG Generators for Bunkó icons
   const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7.5" fill="#1e293b"/></svg>`;
   const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="5" fill="#1e293b"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
   // Initialize UI
   renderTable();
+  updateSettingsUI();
 
-  // Event Listeners
+  // Main Event Listeners
   addPlayerBtn.addEventListener('click', addPlayer);
   newSessionBtn.addEventListener('click', startNewSession);
-  toggleSumBtn.addEventListener('click', toggleSum);
   resetBtn.addEventListener('click', resetFullGame);
 
+  // Settings Modal Listeners
+  settingsBtn.addEventListener('click', openSettingsModal);
+  closeSettingsBtn.addEventListener('click', closeSettingsModal);
+  settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) closeSettingsModal();
+  });
+
+  toggleSumCheckbox.addEventListener('change', (e) => {
+    state.showSum = e.target.checked;
+    saveState();
+    updateSumVisibility();
+  });
+
+  gameTypeSelect.addEventListener('change', (e) => {
+    state.gameType = e.target.value;
+    saveState();
+    updateGameTypeUI();
+  });
+
+  // Bunkó Modal Listeners
   bunkoModalBtn.addEventListener('click', openBunkoModal);
-  closeModalBtn.addEventListener('click', closeBunkoModal);
+  closeBunkoBtn.addEventListener('click', closeBunkoModal);
   bunkoModal.addEventListener('click', (e) => {
     if (e.target === bunkoModal) closeBunkoModal();
   });
@@ -86,10 +115,42 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTotals();
     renderRounds();
     updateSumVisibility();
+    updateGameTypeUI();
   }
 
   /**
-   * Render Player Header Row with Right-Floating Bunkó Badges
+   * Sync settings inputs with current state
+   */
+  function updateSettingsUI() {
+    toggleSumCheckbox.checked = state.showSum;
+    gameTypeSelect.value = state.gameType || 'snapszer';
+  }
+
+  /**
+   * Update Bunkó button visibility depending on Game Type
+   */
+  function updateGameTypeUI() {
+    if (state.gameType === 'snapszer') {
+      bunkoModalBtn.classList.remove('is-hidden');
+    } else {
+      bunkoModalBtn.classList.add('is-hidden');
+    }
+  }
+
+  /**
+   * Settings Modal Open / Close
+   */
+  function openSettingsModal() {
+    updateSettingsUI();
+    settingsModal.classList.remove('is-hidden');
+  }
+
+  function closeSettingsModal() {
+    settingsModal.classList.add('is-hidden');
+  }
+
+  /**
+   * Render Player Header Row
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
@@ -125,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Bunkó Badges Row (floating on right edge)
       const bunkos = state.playerBunkos[index] || [];
-      if (bunkos.length > 0) {
+      if (bunkos.length > 0 && state.gameType === 'snapszer') {
         const badgesRow = document.createElement('div');
         badgesRow.className = 'player-badges-row';
         badgesRow.title = 'Kattints ide a Bunkók kezeléséhez!';
@@ -166,19 +227,9 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateSumVisibility() {
     if (state.showSum) {
       totalTbody.classList.remove('is-hidden');
-      sumStatusText.textContent = 'BE';
-      toggleSumBtn.classList.add('active');
     } else {
       totalTbody.classList.add('is-hidden');
-      sumStatusText.textContent = 'KI';
-      toggleSumBtn.classList.remove('active');
     }
-  }
-
-  function toggleSum() {
-    state.showSum = !state.showSum;
-    saveState();
-    updateSumVisibility();
   }
 
   /**
@@ -333,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Simplified Bunkó Modal Management
+   * Bunkó Modal Management
    */
   function openBunkoModal() {
     selectedPlayerIndices.clear();
@@ -379,9 +430,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  /**
-   * Confirm Bunkó Selection: Automatically awards Szőrös Bunkó if total == 0, else Sima Bunkó
-   */
   function confirmBunkoSelection() {
     if (selectedPlayerIndices.size > 0) {
       const totals = calculateTotals();
@@ -391,7 +439,6 @@ document.addEventListener('DOMContentLoaded', () => {
           state.playerBunkos[playerIdx] = [];
         }
         
-        // Automatic detection: if player total score in session is 0, give Szőrös Bunkó!
         const totalScore = totals[playerIdx];
         if (totalScore === 0) {
           state.playerBunkos[playerIdx].push('szoros');
@@ -428,6 +475,7 @@ document.addEventListener('DOMContentLoaded', () => {
       state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
       state.playerBunkos = state.players.map(() => []);
       saveState();
+      closeSettingsModal();
       renderTable();
     }
   }
