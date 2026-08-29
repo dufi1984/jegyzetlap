@@ -40,41 +40,9 @@
           </table>
         </div>
 
-        <div id="recognition-toast" class="recognition-toast is-hidden"></div>
-
       </div>
     </div>
   </main>
-
-  <!-- Interactive Touchpad Drawer (Pops up ONLY when a cell is focused) -->
-  <div id="touchpad-drawer" class="touchpad-drawer is-hidden">
-    <div class="touchpad-header">
-      <span id="touchpad-target-label" class="touchpad-target-label">Pont beírása</span>
-      <button id="close-touchpad-btn" class="touchpad-close-btn">&times;</button>
-    </div>
-    
-    <!-- Canvas Drawing Surface (Top half of Touchpad) -->
-    <div class="touchpad-canvas-container">
-      <canvas id="touchpad-canvas" class="touchpad-canvas"></canvas>
-      <div class="canvas-hint">Rajzolj ide ujjal / ceruzával (500ms)...</div>
-    </div>
-
-    <!-- Digital Numpad Buttons (Bottom half of Touchpad) -->
-    <div class="touchpad-numpad" id="touchpad-numpad">
-      <button class="num-btn" data-key="1">1</button>
-      <button class="num-btn" data-key="2">2</button>
-      <button class="num-btn" data-key="3">3</button>
-      <button class="num-btn" data-key="4">4</button>
-      <button class="num-btn" data-key="5">5</button>
-      <button class="num-btn" data-key="6">6</button>
-      <button class="num-btn" data-key="7">7</button>
-      <button class="num-btn" data-key="8">8</button>
-      <button class="num-btn" data-key="9">9</button>
-      <button class="num-btn action-btn" data-key="-">-</button>
-      <button class="num-btn" data-key="0">0</button>
-      <button class="num-btn action-btn" data-key="backspace">⌫</button>
-    </div>
-  </div>
 
   <!-- Footer Toolbar -->
   <footer class="app-footer">
@@ -94,7 +62,7 @@
     <!-- Right: Kuka, Force Refresh, Bunkó, Új kör 🔄 -->
     <div class="footer-right">
       <!-- Trash icon button (Clears scores & bunkos) -->
-      <button id="reset-table-btn" class="btn-subtle icon-only-btn" title="Adatok törlése">
+      <button id="reset-table-btn" class="btn-subtle icon-only-btn" title="Adatok és bunkók törlése (nevek megmaradnak)">
         <svg viewBox="0 0 24 24" class="footer-icon"><path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
       </button>
 
@@ -130,14 +98,6 @@
       <label class="popover-label" for="toggle-sum-checkbox">Szumma sáv</label>
       <label class="switch">
         <input type="checkbox" id="toggle-sum-checkbox">
-        <span class="slider"></span>
-      </label>
-    </div>
-
-    <div class="popover-item">
-      <label class="popover-label" for="toggle-handwriting-checkbox">Digitális Touchpad</label>
-      <label class="switch">
-        <input type="checkbox" id="toggle-handwriting-checkbox">
         <span class="slider"></span>
       </label>
     </div>

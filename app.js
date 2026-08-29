@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v21';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v22';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     playerBunkos: [[], [], [], []],
     gameType: 'snapszer',
     showSum: false,
-    enableHandwriting: true,
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
   };
 
@@ -26,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     state.playerBunkos = state.players.map((_, i) => state.playerBunkos?.[i] || []);
   }
   if (!state.gameType) state.gameType = 'snapszer';
-  if (state.enableHandwriting === undefined) state.enableHandwriting = true;
 
   if (state.rounds.length < initialRowCount) {
     while (state.rounds.length < initialRowCount) {
@@ -49,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsBtn = document.getElementById('settings-btn');
   const settingsPopover = document.getElementById('settings-popover');
   const toggleSumCheckbox = document.getElementById('toggle-sum-checkbox');
-  const toggleHandwritingCheckbox = document.getElementById('toggle-handwriting-checkbox');
   const gameTypeSelect = document.getElementById('game-type-select');
 
   // Bunkó Modal Elements
@@ -59,16 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const bunkoModalList = document.getElementById('bunko-modal-list');
   const confirmBunkoBtn = document.getElementById('confirm-bunko-btn');
 
-  // Touchpad Drawer Elements
-  const touchpadDrawer = document.getElementById('touchpad-drawer');
-  const touchpadTargetLabel = document.getElementById('touchpad-target-label');
-  const closeTouchpadBtn = document.getElementById('close-touchpad-btn');
-  const tpCanvas = document.getElementById('touchpad-canvas');
-  const tpNumpad = document.getElementById('touchpad-numpad');
-  const recToast = document.getElementById('recognition-toast');
-  
-  let tpCtx = tpCanvas ? tpCanvas.getContext('2d') : null;
-  let activeScoreInput = null;
   let selectedPlayerIndex = null;
 
   // SVG Generators for Bunkó icons
@@ -82,7 +69,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize UI
   renderTable();
   updateSettingsUI();
-  initTouchpadEngine();
 
   // Main Event Listeners
   addPlayerBtn.addEventListener('click', addPlayer);
@@ -110,14 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
     saveState();
     updateSumVisibility();
   });
-
-  if (toggleHandwritingCheckbox) {
-    toggleHandwritingCheckbox.addEventListener('change', (e) => {
-      state.enableHandwriting = e.target.checked;
-      saveState();
-      renderRounds();
-    });
-  }
 
   gameTypeSelect.addEventListener('change', (e) => {
     state.gameType = e.target.value;
@@ -155,9 +133,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateSettingsUI() {
     toggleSumCheckbox.checked = state.showSum;
-    if (toggleHandwritingCheckbox) {
-      toggleHandwritingCheckbox.checked = state.enableHandwriting !== false;
-    }
     gameTypeSelect.value = state.gameType || 'snapszer';
   }
 
@@ -261,38 +236,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const td = document.createElement('td');
       td.className = 'score-cell';
 
+      // Restore native OS soft keyboard with inputmode decimal
       const input = document.createElement('input');
       input.type = 'text';
+      input.inputMode = 'decimal';
       input.className = 'score-input';
       input.value = roundData[playerIdx] !== undefined ? roundData[playerIdx] : '';
       input.dataset.roundIndex = roundIdx;
       input.dataset.playerIndex = playerIdx;
       input.setAttribute('autocomplete', 'off');
-      
-      if (state.enableHandwriting !== false) {
-        input.setAttribute('inputmode', 'none');
-        input.setAttribute('readonly', 'readonly');
-      } else {
-        input.setAttribute('inputmode', 'decimal');
-        input.removeAttribute('readonly');
-      }
 
-      input.addEventListener('click', (e) => {
-        if (state.enableHandwriting !== false) {
-          e.preventDefault();
-          activeScoreInput = input;
-          openTouchpadDrawer(playerIdx, roundIdx);
-        }
-      });
-
-      input.addEventListener('focus', (e) => {
-        activeScoreInput = input;
-        if (state.enableHandwriting !== false) {
-          openTouchpadDrawer(playerIdx, roundIdx);
-        } else {
-          input.select();
-        }
-      });
+      input.addEventListener('focus', () => input.select());
 
       td.appendChild(input);
       tr.appendChild(td);
@@ -366,13 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
       `input[data-round-index="${roundIdx}"][data-player-index="${playerIdx}"]`
     );
     if (targetInput) {
-      activeScoreInput = targetInput;
-      if (state.enableHandwriting !== false) {
-        openTouchpadDrawer(playerIdx, roundIdx);
-      } else {
-        targetInput.focus();
-        targetInput.select();
-      }
+      targetInput.focus();
+      targetInput.select();
     }
   }
 
@@ -489,6 +438,9 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBunkoModal();
   }
 
+  /**
+   * Start New Session / Új kör (Pontok törlése, bunkók és nevek megmaradnak)
+   */
   function startNewSession() {
     const rowCount = calculateScreenRoundsCount();
     state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
@@ -496,326 +448,15 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTable();
   }
 
+  /**
+   * Trash Icon Button Action: Full reset of score table AND BUNKÓS! (Keeps player names)
+   */
   function resetTableKeepNames() {
     const rowCount = calculateScreenRoundsCount();
     state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
     state.playerBunkos = state.players.map(() => []);
     saveState();
     renderTable();
-  }
-
-  // ==========================================================================
-  // HIGH-PRECISION STROKE RECOGNITION & MULTI-CHARACTER ENGINE
-  // ==========================================================================
-  let isDrawing = false;
-  let currentStroke = [];
-  let allStrokes = [];
-  let strokeTimeout = null;
-
-  function initTouchpadEngine() {
-    if (!tpCanvas || !tpCtx) return;
-
-    if (closeTouchpadBtn) {
-      closeTouchpadBtn.addEventListener('click', closeTouchpadDrawer);
-    }
-
-    if (tpNumpad) {
-      tpNumpad.addEventListener('click', (e) => {
-        const btn = e.target.closest('.num-btn');
-        if (!btn) return;
-        const key = btn.dataset.key;
-        handleNumpadKeyPress(key);
-      });
-    }
-
-    tpCanvas.addEventListener('pointerdown', handleCanvasPointerDown);
-    tpCanvas.addEventListener('pointermove', handleCanvasPointerMove);
-    tpCanvas.addEventListener('pointerup', handleCanvasPointerUp);
-    tpCanvas.addEventListener('pointercancel', handleCanvasPointerUp);
-  }
-
-  function openTouchpadDrawer(playerIdx, roundIdx) {
-    if (state.enableHandwriting === false || !touchpadDrawer) return;
-
-    const playerName = state.players[playerIdx] || `Játékos ${playerIdx + 1}`;
-    if (touchpadTargetLabel) {
-      touchpadTargetLabel.textContent = `${playerName} (Kör ${roundIdx + 1})`;
-    }
-
-    touchpadDrawer.classList.remove('is-hidden');
-    resizeTouchpadCanvas();
-  }
-
-  function closeTouchpadDrawer() {
-    if (touchpadDrawer) {
-      touchpadDrawer.classList.add('is-hidden');
-    }
-  }
-
-  function resizeTouchpadCanvas() {
-    if (!tpCanvas) return;
-    const container = tpCanvas.parentElement;
-    tpCanvas.width = container.clientWidth;
-    tpCanvas.height = container.clientHeight;
-  }
-
-  function handleNumpadKeyPress(key) {
-    if (!activeScoreInput) return;
-
-    if (key === 'backspace') {
-      activeScoreInput.value = activeScoreInput.value.slice(0, -1);
-    } else {
-      activeScoreInput.value = (activeScoreInput.value || '') + key;
-    }
-
-    const event = new Event('input', { bubbles: true });
-    activeScoreInput.dispatchEvent(event);
-  }
-
-  function handleCanvasPointerDown(e) {
-    isDrawing = true;
-    const rect = tpCanvas.getBoundingClientRect();
-    currentStroke = [{ x: e.clientX - rect.left, y: e.clientY - rect.top }];
-
-    if (strokeTimeout) {
-      clearTimeout(strokeTimeout);
-      strokeTimeout = null;
-    }
-  }
-
-  function handleCanvasPointerMove(e) {
-    if (!isDrawing) return;
-    const rect = tpCanvas.getBoundingClientRect();
-    const pt = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-    currentStroke.push(pt);
-
-    tpCtx.strokeStyle = '#60a5fa';
-    tpCtx.lineWidth = 4;
-    tpCtx.lineCap = 'round';
-    tpCtx.lineJoin = 'round';
-
-    const pts = currentStroke;
-    if (pts.length > 1) {
-      tpCtx.beginPath();
-      tpCtx.moveTo(pts[pts.length - 2].x, pts[pts.length - 2].y);
-      tpCtx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-      tpCtx.stroke();
-    }
-  }
-
-  function handleCanvasPointerUp(e) {
-    if (!isDrawing) return;
-    isDrawing = false;
-
-    if (currentStroke.length > 2) {
-      allStrokes.push(currentStroke);
-    }
-    currentStroke = [];
-
-    // Recognition window set to EXACTLY 500 ms!
-    strokeTimeout = setTimeout(processHandwritingStrokes, 500);
-  }
-
-  /**
-   * Group strokes spatially (left-to-right) or classify compound gestures
-   */
-  function processHandwritingStrokes() {
-    if (allStrokes.length === 0) return;
-
-    // Group strokes by horizontal position (separate sequential characters vs compound gestures)
-    const characterGroups = groupStrokesSpatially(allStrokes);
-    let fullResult = '';
-
-    characterGroups.forEach(group => {
-      const char = classifySingleOrCompoundGesture(group);
-      if (char !== null) {
-        fullResult += char;
-      }
-    });
-
-    if (fullResult.length > 0 && activeScoreInput) {
-      activeScoreInput.value = (activeScoreInput.value || '') + fullResult;
-      const event = new Event('input', { bubbles: true });
-      activeScoreInput.dispatchEvent(event);
-      showRecognitionToast(`Felismerve: ${fullResult}`);
-    }
-
-    clearTouchpadCanvas();
-  }
-
-  function clearTouchpadCanvas() {
-    allStrokes = [];
-    if (tpCtx && tpCanvas) {
-      tpCtx.clearRect(0, 0, tpCanvas.width, tpCanvas.height);
-    }
-  }
-
-  function showRecognitionToast(text) {
-    if (!recToast) return;
-    recToast.textContent = text;
-    recToast.classList.remove('is-hidden');
-    setTimeout(() => {
-      recToast.classList.add('is-hidden');
-    }, 1200);
-  }
-
-  /**
-   * Separate strokes into distinct left-to-right character groups
-   */
-  function groupStrokesSpatially(strokes) {
-    if (strokes.length <= 1) return [strokes];
-
-    // Compute bounding box for each stroke
-    const strokeBoxes = strokes.map(st => {
-      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-      st.forEach(p => {
-        if (p.x < minX) minX = p.x;
-        if (p.x > maxX) maxX = p.x;
-        if (p.y < minY) minY = p.y;
-        if (p.y > maxY) maxY = p.y;
-      });
-      return { stroke: st, minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
-    });
-
-    // Sort strokes by minX (left to right)
-    strokeBoxes.sort((a, b) => a.minX - b.minX);
-
-    const groups = [];
-    let currentGroup = [strokeBoxes[0]];
-
-    for (let i = 1; i < strokeBoxes.length; i++) {
-      const prevBox = currentGroup[currentGroup.length - 1];
-      const currBox = strokeBoxes[i];
-
-      // Check spatial overlap: If strokes overlap horizontally or intersect, group them together
-      const horizontalOverlap = !(currBox.minX > prevBox.maxX + 15 || prevBox.minX > currBox.maxX + 15);
-
-      if (horizontalOverlap) {
-        currentGroup.push(currBox);
-      } else {
-        groups.push(currentGroup.map(item => item.stroke));
-        currentGroup = [currBox];
-      }
-    }
-
-    if (currentGroup.length > 0) {
-      groups.push(currentGroup.map(item => item.stroke));
-    }
-
-    return groups;
-  }
-
-  /**
-   * High-precision classifier for single stroke or compound strokes (0-9, +, -)
-   */
-  function classifySingleOrCompoundGesture(strokes) {
-    const points = [];
-    strokes.forEach(st => points.push(...st));
-    if (points.length < 3) return null;
-
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    let totalPathLength = 0;
-
-    points.forEach((p, idx) => {
-      if (p.x < minX) minX = p.x;
-      if (p.x > maxX) maxX = p.x;
-      if (p.y < minY) minY = p.y;
-      if (p.y > maxY) maxY = p.y;
-
-      if (idx > 0) {
-        totalPathLength += Math.hypot(p.x - points[idx - 1].x, p.y - points[idx - 1].y);
-      }
-    });
-
-    const width = Math.max(10, maxX - minX);
-    const height = Math.max(10, maxY - minY);
-    const aspectRatio = height / width;
-    const numStrokes = strokes.length;
-
-    const firstStroke = strokes[0];
-    const startPt = firstStroke[0];
-    const endPt = firstStroke[firstStroke.length - 1];
-
-    const dxTotal = endPt.x - startPt.x;
-    const dyTotal = endPt.y - startPt.y;
-
-    const distStartEnd = Math.hypot(dxTotal, dyTotal);
-    const closedRatio = distStartEnd / (totalPathLength || 1);
-    const isClosedLoop = closedRatio < 0.38;
-
-    // --- TWO-STROKE COMPOUND GESTURES (e.g. +, 4, 7, 5) ---
-    if (numStrokes === 2) {
-      const st1 = strokes[0], st2 = strokes[1];
-      const dx1 = Math.abs(st1[st1.length - 1].x - st1[0].x);
-      const dy1 = Math.abs(st1[st1.length - 1].y - st1[0].y);
-      const dx2 = Math.abs(st2[st2.length - 1].x - st2[0].x);
-      const dy2 = Math.abs(st2[st2.length - 1].y - st2[0].y);
-
-      // Plus (+) -> 1 horizontal + 1 vertical stroke intersecting
-      if ((dx1 > 1.4 * dy1 && dy2 > 1.4 * dx2) || (dy1 > 1.4 * dx1 && dx2 > 1.4 * dy2)) {
-        return '+';
-      }
-
-      // Four (4) -> L-shape or angled strokes
-      return '4';
-    }
-
-    // --- SINGLE-STROKE GESTURES ---
-
-    // 1. MINUS (-) -> wide horizontal line
-    if (width > 2.0 * height && Math.abs(dxTotal) > 1.8 * Math.abs(dyTotal)) {
-      return '-';
-    }
-
-    // 2. ONE (1) -> tall vertical line, drawn downward
-    if (height > 1.8 * width && Math.abs(dyTotal) > 1.6 * Math.abs(dxTotal) && dyTotal > 0 && closedRatio > 0.6) {
-      return '1';
-    }
-
-    // 3. ZERO (0) -> closed loop, centered centroid
-    if (isClosedLoop && aspectRatio >= 0.65 && aspectRatio <= 2.2) {
-      return '0';
-    }
-
-    // 4. SIX (6) -> loop at bottom, starts high
-    if (isClosedLoop && startPt.y < minY + height * 0.4) {
-      return '6';
-    }
-
-    // 5. NINE (9) -> loop at top, ends low
-    if (isClosedLoop && endPt.y > minY + height * 0.6) {
-      return '9';
-    }
-
-    // 6. EIGHT (8) -> closed loop in middle / figure-8
-    if (isClosedLoop) {
-      return '8';
-    }
-
-    // 7. SEVEN (7) -> starts top-left, horizontal right, diagonal down-left
-    if (startPt.x < minX + width * 0.45 && startPt.y < minY + height * 0.38 && endPt.y > minY + height * 0.6) {
-      return '7';
-    }
-
-    // 8. TWO (2) -> starts top, curves right/down, ends bottom-right
-    if (endPt.x > minX + width * 0.5 && endPt.y > minY + height * 0.7) {
-      return '2';
-    }
-
-    // 9. THREE (3) -> double curve on right side, ends bottom-left/middle
-    if (endPt.y > minY + height * 0.65) {
-      return '3';
-    }
-
-    // 10. FIVE (5)
-    if (startPt.x > minX + width * 0.5 && startPt.y < minY + height * 0.35) {
-      return '5';
-    }
-
-    // General fallbacks
-    if (aspectRatio > 1.6) return '1';
-    if (aspectRatio < 0.55) return '-';
-    return '5';
   }
 
   function saveState() {
