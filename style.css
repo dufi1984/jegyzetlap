@@ -127,7 +127,7 @@ body {
   background: transparent;
   border: 1px dashed transparent;
   border-radius: 4px;
-  width: calc(100% - 24px);
+  width: calc(100% - 28px);
   padding: 2px;
   outline: none;
   transition: all 0.15s;
@@ -139,32 +139,41 @@ body {
   border-color: #94a3b8;
 }
 
+/* Touch-friendly Player Delete X Button on the RIGHT side of header cell */
 .remove-player-btn {
   position: absolute;
-  left: 2px;
+  right: 3px;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   border: none;
-  color: #94a3b8;
-  font-size: 0.8rem;
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: bold;
   cursor: pointer;
-  opacity: 0.2;
-  padding: 2px;
-  border-radius: 3px;
-  transition: opacity 0.15s, color 0.15s;
+  opacity: 0.6;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease-in-out;
 }
 
 .player-header:hover .remove-player-btn,
-.remove-player-btn:focus {
+.remove-player-btn:focus,
+.remove-player-btn:active {
   opacity: 1;
-  color: #ef4444;
+  background-color: #ef4444;
+  color: #ffffff;
 }
 
-/* Floating Bunkó Badges on right edge */
+/* Floating Bunkó Badges on right side (offset left if delete button exists) */
 .player-badges-row {
   position: absolute;
-  right: 4px;
+  right: 30px; /* Placed cleanly to the left of the right-aligned delete button */
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -173,14 +182,18 @@ body {
   cursor: pointer;
   z-index: 5;
   background-color: rgba(255, 255, 255, 0.9);
-  padding: 2px 4px;
+  padding: 2px 3px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.player-badges-row.no-delete-btn {
+  right: 4px;
+}
+
 .bunko-icon {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   display: inline-block;
   vertical-align: middle;
   transition: transform 0.15s;
@@ -404,29 +417,6 @@ body {
   color: #0f172a;
   outline: none;
   cursor: pointer;
-}
-
-.setting-divider {
-  border: none;
-  border-top: 1px solid #e2e8f0;
-  margin: 4px 0;
-}
-
-.btn-danger-setting {
-  width: 100%;
-  background-color: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.btn-danger-setting:hover {
-  background-color: #fee2e2;
 }
 
 /* Toggle Switch Switcher */

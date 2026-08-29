@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v8';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v9';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -43,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   const addPlayerBtn = document.getElementById('add-player-btn');
   const newSessionBtn = document.getElementById('new-session-btn');
-  const resetBtn = document.getElementById('reset-btn');
 
   // Settings Modal Elements
   const settingsBtn = document.getElementById('settings-btn');
@@ -72,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Main Event Listeners
   addPlayerBtn.addEventListener('click', addPlayer);
   newSessionBtn.addEventListener('click', startNewSession);
-  resetBtn.addEventListener('click', resetFullGame);
 
   // Settings Modal Listeners (Instant auto-save, no page reload)
   settingsBtn.addEventListener('click', openSettingsModal);
@@ -148,10 +146,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Render Player Header Row
+   * Render Player Header Row with Right-Aligned Delete Button & Floating Bunkó Badges
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
+
+    const hasDeleteBtn = state.players.length > 2;
 
     state.players.forEach((playerName, index) => {
       const th = document.createElement('th');
@@ -161,32 +161,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const innerDiv = document.createElement('div');
       innerDiv.className = 'player-header-inner';
 
-      if (state.players.length > 2) {
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'remove-player-btn';
-        removeBtn.innerHTML = '✕';
-        removeBtn.title = 'Játékos törlése';
-        removeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          removePlayer(index);
-        });
-        innerDiv.appendChild(removeBtn);
-      }
-
+      // Name Input
       const input = document.createElement('input');
       input.type = 'text';
       input.className = 'player-name-input';
       input.value = playerName;
       input.placeholder = `Játékos ${index + 1}`;
       input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
-
       innerDiv.appendChild(input);
 
-      // Bunkó Badges Row (floating on right edge)
+      // Bunkó Badges Row (floating on right side, offset left if delete button exists)
       const bunkos = state.playerBunkos[index] || [];
       if (bunkos.length > 0 && state.gameType === 'snapszer') {
         const badgesRow = document.createElement('div');
         badgesRow.className = 'player-badges-row';
+        if (!hasDeleteBtn) {
+          badgesRow.classList.add('no-delete-btn');
+        }
         badgesRow.title = 'Kattints ide a Bunkók kezeléséhez!';
         badgesRow.addEventListener('click', openBunkoModal);
 
@@ -197,6 +188,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         innerDiv.appendChild(badgesRow);
+      }
+
+      // Touch-friendly Remove player button on the RIGHT side
+      if (hasDeleteBtn) {
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-player-btn';
+        removeBtn.innerHTML = '✕';
+        removeBtn.title = 'Játékos törlése';
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removePlayer(index);
+        });
+        innerDiv.appendChild(removeBtn);
       }
 
       th.appendChild(innerDiv);
@@ -460,20 +464,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const rowCount = calculateScreenRoundsCount();
       state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
       saveState();
-      renderTable();
-    }
-  }
-
-  /**
-   * Full Game Reset (Clears scores AND bunkós)
-   */
-  function resetFullGame() {
-    if (confirm('Új teljes játék: Minden pont ÉS az összes BUNKÓ is törlésre kerül. Folytatod?')) {
-      const rowCount = calculateScreenRoundsCount();
-      state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
-      state.playerBunkos = state.players.map(() => []);
-      saveState();
-      closeSettingsModal();
       renderTable();
     }
   }
