@@ -464,7 +464,19 @@ body {
 .footer-icon {
   width: 22px;
   height: 22px;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.footer-icon:not(.stroke-icon) {
   fill: currentColor;
+}
+
+.footer-icon.stroke-icon,
+.footer-icon.stroke-icon * {
+  fill: none !important;
+  stroke: currentColor;
 }
 
 .icon-right {
