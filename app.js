@@ -1,9 +1,9 @@
 /**
- * Kártyás Jegyzetlap - Card Game Score Pad Application Logic
+ * Kártyás Jegyzetlap - Card Game Score Pad Application Logic (Snapszer, Rikiki, Általános)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v29';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v30';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -34,8 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (state.rounds.length < initialRowCount) {
     while (state.rounds.length < initialRowCount) {
-      state.rounds.push(state.players.map(() => ''));
+      state.rounds.push(createEmptyRoundArray());
     }
+  }
+
+  function createEmptyRoundArray() {
+    return state.players.map(() => state.gameType === 'rikiki' ? { bid: '', score: '' } : '');
   }
 
   // DOM Elements
@@ -68,12 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let selectedPlayerIndex = null;
 
-  // SVG Generators for Bunkó icons (Using currentColor for instant theme matching)
+  // SVG Generators for Bunkó icons
   const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7" fill="currentColor"/></svg>`;
   const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="6.5" fill="currentColor"/><path d="M12 1.5v3.5 M12 19v3.5 M1.5 12h3.5 M19 12h3.5 M4.6 4.6l2.5 2.5 M16.9 16.9l2.5 2.5 M4.6 19.4l2.5-2.5 M16.9 7.1l2.5-2.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>`;
 
   function isGameStarted() {
-    return state.rounds.some(round => round.some(val => val !== '' && val !== null && val !== undefined));
+    return state.rounds.some(round => round.some(val => {
+      if (val === null || val === undefined) return false;
+      if (typeof val === 'object') {
+        return (val.bid !== '' && val.bid !== null && val.bid !== undefined) ||
+               (val.score !== '' && val.score !== null && val.score !== undefined);
+      }
+      return val !== '';
+    }));
   }
 
   // Synchronize horizontal scrolling between table wrapper and bottom sum bar
@@ -128,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
   gameTypeSelect.addEventListener('change', (e) => {
     state.gameType = e.target.value;
     const rowCount = calculateScreenRoundsCount();
-    state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
+    state.rounds = Array.from({ length: rowCount }, () => createEmptyRoundArray());
     state.playerBunkos = state.players.map(() => []);
     state.lockedRowsCount = 0;
     state.separatorRowIndices = [];
@@ -286,26 +297,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
     state.players.forEach((_, playerIdx) => {
       const td = document.createElement('td');
-      td.className = 'score-cell';
+      td.className = state.gameType === 'rikiki' ? 'score-cell score-cell-rikiki' : 'score-cell';
 
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.inputMode = 'decimal';
-      input.className = 'score-input';
-      input.value = roundData[playerIdx] !== undefined ? roundData[playerIdx] : '';
-      input.dataset.roundIndex = roundIdx;
-      input.dataset.playerIndex = playerIdx;
-      input.setAttribute('autocomplete', 'off');
+      const cellVal = roundData[playerIdx];
 
-      if (isLockedRow) {
-        input.classList.add('is-locked');
-        input.setAttribute('readonly', 'readonly');
-        input.setAttribute('tabindex', '-1');
+      if (state.gameType === 'rikiki') {
+        // Dual sub-cell layout for Rikiki: Left (Bid) + Right (Actual Score)
+        const cellGroup = document.createElement('div');
+        cellGroup.className = 'rikiki-cell-group';
+
+        const bidVal = (typeof cellVal === 'object' && cellVal !== null) ? (cellVal.bid || '') : '';
+        const scoreVal = (typeof cellVal === 'object' && cellVal !== null) ? (cellVal.score || '') : (cellVal || '');
+
+        // Left Sub-Cell: Vállalás / Bid memo
+        const bidInput = document.createElement('input');
+        bidInput.type = 'text';
+        bidInput.inputMode = 'decimal';
+        bidInput.className = 'rikiki-bid-input';
+        bidInput.value = bidVal;
+        bidInput.dataset.roundIndex = roundIdx;
+        bidInput.dataset.playerIndex = playerIdx;
+        bidInput.dataset.field = 'bid';
+        bidInput.setAttribute('autocomplete', 'off');
+        bidInput.setAttribute('title', 'Vállalt ütések');
+
+        // Right Sub-Cell: Tényleges pontszám
+        const scoreInput = document.createElement('input');
+        scoreInput.type = 'text';
+        scoreInput.inputMode = 'decimal';
+        scoreInput.className = 'rikiki-score-input';
+        scoreInput.value = scoreVal;
+        scoreInput.dataset.roundIndex = roundIdx;
+        scoreInput.dataset.playerIndex = playerIdx;
+        scoreInput.dataset.field = 'score';
+        scoreInput.setAttribute('autocomplete', 'off');
+        scoreInput.setAttribute('title', 'Tényleges pontszám');
+
+        if (isLockedRow) {
+          bidInput.classList.add('is-locked');
+          bidInput.setAttribute('readonly', 'readonly');
+          bidInput.setAttribute('tabindex', '-1');
+
+          scoreInput.classList.add('is-locked');
+          scoreInput.setAttribute('readonly', 'readonly');
+          scoreInput.setAttribute('tabindex', '-1');
+        } else {
+          bidInput.addEventListener('focus', () => bidInput.select());
+          scoreInput.addEventListener('focus', () => scoreInput.select());
+        }
+
+        cellGroup.appendChild(bidInput);
+        cellGroup.appendChild(scoreInput);
+        td.appendChild(cellGroup);
       } else {
-        input.addEventListener('focus', () => input.select());
+        // Standard single score input (Snapszer / Általános)
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.inputMode = 'decimal';
+        input.className = 'score-input';
+        input.value = typeof cellVal === 'object' ? (cellVal.score || '') : (cellVal !== undefined ? cellVal : '');
+        input.dataset.roundIndex = roundIdx;
+        input.dataset.playerIndex = playerIdx;
+        input.dataset.field = 'score';
+        input.setAttribute('autocomplete', 'off');
+
+        if (isLockedRow) {
+          input.classList.add('is-locked');
+          input.setAttribute('readonly', 'readonly');
+          input.setAttribute('tabindex', '-1');
+        } else {
+          input.addEventListener('focus', () => input.select());
+        }
+
+        td.appendChild(input);
       }
 
-      td.appendChild(input);
       tr.appendChild(td);
     });
 
@@ -313,11 +379,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleCellInput(e) {
-    if (!e.target.classList.contains('score-input')) return;
-
     const input = e.target;
+    if (!input.classList.contains('score-input') && 
+        !input.classList.contains('rikiki-bid-input') && 
+        !input.classList.contains('rikiki-score-input')) {
+      return;
+    }
+
     const roundIdx = parseInt(input.dataset.roundIndex, 10);
     const playerIdx = parseInt(input.dataset.playerIndex, 10);
+    const field = input.dataset.field || 'score';
 
     if (roundIdx < state.lockedRowsCount) return;
 
@@ -330,7 +401,15 @@ document.addEventListener('DOMContentLoaded', () => {
       val = cleaned;
     }
 
-    state.rounds[roundIdx][playerIdx] = val;
+    if (state.gameType === 'rikiki') {
+      if (typeof state.rounds[roundIdx][playerIdx] !== 'object' || state.rounds[roundIdx][playerIdx] === null) {
+        state.rounds[roundIdx][playerIdx] = { bid: '', score: '' };
+      }
+      state.rounds[roundIdx][playerIdx][field] = val;
+    } else {
+      state.rounds[roundIdx][playerIdx] = val;
+    }
+
     saveState();
     renderTotals();
 
@@ -340,44 +419,78 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function handleCellKeyDown(e) {
-    if (!e.target.classList.contains('score-input')) return;
-
     const input = e.target;
+    if (!input.classList.contains('score-input') && 
+        !input.classList.contains('rikiki-bid-input') && 
+        !input.classList.contains('rikiki-score-input')) {
+      return;
+    }
+
     const currentRound = parseInt(input.dataset.roundIndex, 10);
     const currentPlayer = parseInt(input.dataset.playerIndex, 10);
+    const field = input.dataset.field || 'score';
 
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (currentRound === state.rounds.length - 1) {
-        appendEmptyRound(false);
+      if (state.gameType === 'rikiki' && field === 'bid') {
+        // Move from bid to score input of same player
+        focusRikikiCell(currentRound, currentPlayer, 'score');
+      } else {
+        // Move to next round
+        if (currentRound === state.rounds.length - 1) {
+          appendEmptyRound(false);
+        }
+        focusCell(currentRound + 1, currentPlayer, true, state.gameType === 'rikiki' ? 'bid' : 'score');
       }
-      focusCell(currentRound + 1, currentPlayer);
     } else if (e.key === 'ArrowDown') {
       if (currentRound < state.rounds.length - 1) {
         e.preventDefault();
-        focusCell(currentRound + 1, currentPlayer);
+        focusCell(currentRound + 1, currentPlayer, true, field);
       }
     } else if (e.key === 'ArrowUp') {
       if (currentRound > state.lockedRowsCount) {
         e.preventDefault();
-        focusCell(currentRound - 1, currentPlayer);
+        focusCell(currentRound - 1, currentPlayer, true, field);
       }
     } else if (e.key === 'ArrowRight' && input.selectionStart === input.value.length) {
-      if (currentPlayer < state.players.length - 1) {
+      if (state.gameType === 'rikiki' && field === 'bid') {
         e.preventDefault();
-        focusCell(currentRound, currentPlayer + 1);
+        focusRikikiCell(currentRound, currentPlayer, 'score');
+      } else if (currentPlayer < state.players.length - 1) {
+        e.preventDefault();
+        focusCell(currentRound, currentPlayer + 1, true, state.gameType === 'rikiki' ? 'bid' : 'score');
       }
     } else if (e.key === 'ArrowLeft' && input.selectionStart === 0) {
-      if (currentPlayer > 0) {
+      if (state.gameType === 'rikiki' && field === 'score') {
         e.preventDefault();
-        focusCell(currentRound, currentPlayer - 1);
+        focusRikikiCell(currentRound, currentPlayer, 'bid');
+      } else if (currentPlayer > 0) {
+        e.preventDefault();
+        focusCell(currentRound, currentPlayer - 1, true, state.gameType === 'rikiki' ? 'score' : 'score');
       }
     }
   }
 
-  function focusCell(roundIdx, playerIdx, selectText = true) {
+  function focusCell(roundIdx, playerIdx, selectText = true, field = 'score') {
+    if (state.gameType === 'rikiki') {
+      focusRikikiCell(roundIdx, playerIdx, field, selectText);
+    } else {
+      const targetInput = roundsTbody.querySelector(
+        `input[data-round-index="${roundIdx}"][data-player-index="${playerIdx}"]`
+      );
+      if (targetInput && !targetInput.classList.contains('is-locked')) {
+        targetInput.focus();
+        if (selectText) {
+          targetInput.select();
+        }
+      }
+    }
+  }
+
+  function focusRikikiCell(roundIdx, playerIdx, field = 'score', selectText = true) {
+    const selector = field === 'bid' ? '.rikiki-bid-input' : '.rikiki-score-input';
     const targetInput = roundsTbody.querySelector(
-      `input[data-round-index="${roundIdx}"][data-player-index="${playerIdx}"]`
+      `input${selector}[data-round-index="${roundIdx}"][data-player-index="${playerIdx}"]`
     );
     if (targetInput && !targetInput.classList.contains('is-locked')) {
       targetInput.focus();
@@ -397,8 +510,20 @@ document.addEventListener('DOMContentLoaded', () => {
       let hasValue = false;
       for (let r = startRowIdx; r < state.rounds.length; r++) {
         const val = state.rounds[r][playerIdx];
-        if (val !== '' && val !== null && val !== undefined && !isNaN(Number(val))) {
-          sum += Number(val);
+        let numVal = null;
+
+        if (val !== '' && val !== null && val !== undefined) {
+          if (typeof val === 'object') {
+            if (val.score !== '' && val.score !== null && !isNaN(Number(val.score))) {
+              numVal = Number(val.score);
+            }
+          } else if (!isNaN(Number(val))) {
+            numVal = Number(val);
+          }
+        }
+
+        if (numVal !== null) {
+          sum += numVal;
           hasValue = true;
         }
       }
@@ -410,7 +535,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const newPlayerName = `Név${state.players.length + 1}`;
     state.players.push(newPlayerName);
     state.playerBunkos.push([]);
-    state.rounds.forEach(round => round.push(''));
+    state.rounds.forEach(round => round.push(state.gameType === 'rikiki' ? { bid: '', score: '' } : ''));
     saveState();
     renderTable();
   }
@@ -430,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function appendEmptyRound(shouldFocus = true) {
-    const emptyRound = state.players.map(() => '');
+    const emptyRound = createEmptyRoundArray();
     state.rounds.push(emptyRound);
     const newRoundIndex = state.rounds.length - 1;
     const tr = createRoundRow(newRoundIndex, emptyRound);
@@ -510,7 +635,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function startNewSession() {
     let lastScoredRowIdx = -1;
     for (let r = state.rounds.length - 1; r >= 0; r--) {
-      if (state.rounds[r].some(val => val !== '' && val !== null && val !== undefined)) {
+      const hasContent = state.rounds[r].some(val => {
+        if (val === null || val === undefined) return false;
+        if (typeof val === 'object') return val.score !== '' || val.bid !== '';
+        return val !== '';
+      });
+      if (hasContent) {
         lastScoredRowIdx = r;
         break;
       }
@@ -525,7 +655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const activeRowsRemaining = state.rounds.length - state.lockedRowsCount;
       if (activeRowsRemaining < 8) {
         for (let i = 0; i < 8; i++) {
-          state.rounds.push(state.players.map(() => ''));
+          state.rounds.push(createEmptyRoundArray());
         }
       }
 
@@ -536,7 +666,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function resetTableKeepNames() {
     const rowCount = calculateScreenRoundsCount();
-    state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
+    state.rounds = Array.from({ length: rowCount }, () => createEmptyRoundArray());
     state.playerBunkos = state.players.map(() => []);
     state.lockedRowsCount = 0;
     state.separatorRowIndices = [];
