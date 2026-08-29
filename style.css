@@ -68,7 +68,7 @@ body {
 }
 
 /* --------------------------------------------------------------------------
-   Interactive Touchpad Drawer Overlay (Popping up ONLY when cell is focused)
+   Interactive Touchpad Drawer Overlay
    -------------------------------------------------------------------------- */
 .touchpad-drawer {
   position: fixed;
@@ -76,7 +76,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 480px;
+  max-width: 520px;
   background-color: #1e293b;
   color: #ffffff;
   border-top-left-radius: 16px;
@@ -123,11 +123,11 @@ body {
   color: #ffffff;
 }
 
-/* Drawing Area (Top half of Touchpad) */
+/* Drawing Area (Double Height: 240px for comfortable finger & stylus writing) */
 .touchpad-canvas-container {
   position: relative;
   width: 100%;
-  height: 110px;
+  height: 240px;
   background-color: #020617;
   touch-action: none;
   cursor: crosshair;
@@ -141,15 +141,15 @@ body {
 
 .canvas-hint {
   position: absolute;
-  bottom: 4px;
-  right: 8px;
-  font-size: 0.72rem;
-  color: #475569;
+  bottom: 6px;
+  right: 10px;
+  font-size: 0.75rem;
+  color: #64748b;
   pointer-events: none;
   user-select: none;
 }
 
-/* Numpad Buttons Area (Bottom half of Touchpad) */
+/* Numpad Buttons Area */
 .touchpad-numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -715,6 +715,9 @@ input:checked + .slider:before {
 
 /* Responsive adjustments */
 @media (max-width: 480px) {
+  .touchpad-canvas-container {
+    height: 220px;
+  }
   .app-footer {
     padding-left: max(6px, env(safe-area-inset-left));
     padding-right: max(6px, env(safe-area-inset-right));

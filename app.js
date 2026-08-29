@@ -3,7 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v19';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v20';
 
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
@@ -506,8 +506,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================================
-  // INTERACTIVE TOUCHPAD DRAWER (Drawing Canvas + Digital Numpad)
-  // Pops up ONLY when a score cell is focused & prevents OS keyboard popup!
+  // INTERACTIVE TOUCHPAD DRAWER ENGINE (Digits 0-9, +, -)
+  // Pops up ONLY when cell is focused with 500ms recognition delay!
   // ==========================================================================
   let isDrawing = false;
   let currentStroke = [];
@@ -521,7 +521,6 @@ document.addEventListener('DOMContentLoaded', () => {
       closeTouchpadBtn.addEventListener('click', closeTouchpadDrawer);
     }
 
-    // Touchpad Numpad Button Clicks
     if (tpNumpad) {
       tpNumpad.addEventListener('click', (e) => {
         const btn = e.target.closest('.num-btn');
@@ -531,7 +530,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Canvas Pointer Drawing Listeners
     tpCanvas.addEventListener('pointerdown', handleCanvasPointerDown);
     tpCanvas.addEventListener('pointermove', handleCanvasPointerMove);
     tpCanvas.addEventListener('pointerup', handleCanvasPointerUp);
@@ -593,7 +591,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const pt = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     currentStroke.push(pt);
 
-    // Draw ink line on canvas
     tpCtx.strokeStyle = '#60a5fa';
     tpCtx.lineWidth = 4;
     tpCtx.lineCap = 'round';
@@ -656,7 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Lightweight Stroke Classifier for Digits 0-9, +, -
+   * Enhanced Stroke Classifier for Digits 0-9, +, -
    */
   function classifyGesture(strokes) {
     const points = [];
@@ -671,76 +668,104 @@ document.addEventListener('DOMContentLoaded', () => {
       if (p.y > maxY) maxY = p.y;
     });
 
-    const width = Math.max(10, maxX - minX);
-    const height = Math.max(10, maxY - minY);
+    const width = Math.max(12, maxX - minX);
+    const height = Math.max(12, maxY - minY);
     const aspectRatio = height / width;
     const numStrokes = strokes.length;
 
-    const firstStroke = strokes[0];
-    const startPt = firstStroke[0];
-    const endPt = firstStroke[firstStroke.length - 1];
+    const st1 = strokes[0];
+    const startPt = st1[0];
+    const endPt = st1[st1.length - 1];
 
-    const dx = endPt.x - startPt.x;
-    const dy = endPt.y - startPt.y;
+    const dxTotal = endPt.x - startPt.x;
+    const dyTotal = endPt.y - startPt.y;
 
-    const distStartEnd = Math.hypot(dx, dy);
+    const distStartEnd = Math.hypot(dxTotal, dyTotal);
     const diagonal = Math.hypot(width, height);
-    const isClosedLoop = distStartEnd < 0.38 * diagonal;
+    const isClosedLoop = distStartEnd < 0.35 * diagonal;
 
-    // 1. Minus (-) -> 1 horizontal stroke
-    if (numStrokes === 1 && width > 2.2 * height && Math.abs(dx) > Math.abs(dy)) {
+    let totalAngleChange = 0;
+    let horizReversals = 0;
+
+    for (let i = 1; i < st1.length - 1; i++) {
+      const prev = st1[i - 1];
+      const curr = st1[i];
+      const next = st1[i + 1];
+
+      const v1 = { x: curr.x - prev.x, y: curr.y - prev.y };
+      const v2 = { x: next.x - curr.x, y: next.y - curr.y };
+
+      const cross = v1.x * v2.y - v1.y * v2.x;
+      const dot = v1.x * v2.x + v1.y * v2.y;
+      totalAngleChange += Math.atan2(cross, dot);
+
+      if (i > 2 && i < st1.length - 2) {
+        if ((v1.x > 0 && v2.x < 0) || (v1.x < 0 && v2.x > 0)) horizReversals++;
+      }
+    }
+
+    // 1. MINUS (-) -> 1 stroke, wide horizontal
+    if (numStrokes === 1 && width > 2.0 * height && Math.abs(dxTotal) > 1.8 * Math.abs(dyTotal)) {
       return '-';
     }
 
-    // 2. Plus (+) -> 2 strokes intersecting
+    // 2. PLUS (+) -> 2 strokes intersecting
     if (numStrokes === 2) {
-      const st1 = strokes[0], st2 = strokes[1];
-      const dx1 = Math.abs(st1[st1.length - 1].x - st1[0].x);
-      const dy1 = Math.abs(st1[st1.length - 1].y - st1[0].y);
-      const dx2 = Math.abs(st2[st2.length - 1].x - st2[0].x);
-      const dy2 = Math.abs(st2[st2.length - 1].y - st2[0].y);
+      const stA = strokes[0], stB = strokes[1];
+      const dxA = Math.abs(stA[stA.length - 1].x - stA[0].x);
+      const dyA = Math.abs(stA[stA.length - 1].y - stA[0].y);
+      const dxB = Math.abs(stB[stB.length - 1].x - stB[0].x);
+      const dyB = Math.abs(stB[stB.length - 1].y - stB[0].y);
 
-      if ((dx1 > dy1 && dy2 > dx2) || (dy1 > dx1 && dx2 > dy2)) {
+      if ((dxA > dyA && dyB > dxB) || (dyA > dxA && dxB > dyB)) {
         return '+';
       }
     }
 
-    // 3. One (1) -> 1 stroke, tall vertical
-    if (numStrokes === 1 && height > 2.0 * width && dy > 0 && Math.abs(dy) > Math.abs(dx)) {
+    // 3. ONE (1) -> 1 stroke, tall vertical
+    if (numStrokes === 1 && height > 1.8 * width && dyTotal > 0 && Math.abs(dyTotal) > 1.5 * Math.abs(dxTotal) && Math.abs(totalAngleChange) < 1.8) {
       return '1';
     }
 
-    // 4. Zero (0) -> 1 stroke, closed loop
-    if (numStrokes === 1 && isClosedLoop && aspectRatio >= 0.7 && aspectRatio <= 2.5) {
+    // 4. ZERO (0) -> 1 stroke, closed loop
+    if (numStrokes === 1 && isClosedLoop && Math.abs(totalAngleChange) > 3.0) {
       return '0';
     }
 
-    // 5. Seven (7)
-    if (numStrokes === 1 && startPt.x < minX + width * 0.4 && startPt.y < minY + height * 0.4) {
-      if (endPt.y > minY + height * 0.6) {
+    // 5. SEVEN (7) -> 1 stroke, starts top-left, goes right, then diagonal down
+    if (numStrokes === 1 && startPt.x < minX + width * 0.45 && startPt.y < minY + height * 0.4) {
+      if (endPt.y > minY + height * 0.6 && endPt.x < minX + width * 0.6) {
         return '7';
       }
     }
 
-    // 6. Four (4)
+    // 6. FOUR (4) -> 2 strokes
     if (numStrokes === 2) {
       return '4';
     }
 
-    if (isClosedLoop) {
+    // 7. SIX (6) vs NINE (9) vs EIGHT (8)
+    if (numStrokes === 1 && isClosedLoop) {
       const loopCenterY = (startPt.y + endPt.y) / 2;
-      if (loopCenterY < minY + height * 0.5) return '9';
-      return '6';
+      if (loopCenterY < minY + height * 0.45) return '9';
+      if (loopCenterY > minY + height * 0.55) return '6';
+      return '8';
     }
 
-    if (endPt.x > minX + width * 0.6 && endPt.y > minY + height * 0.6) {
+    // 8. TWO (2) vs THREE (3) vs FIVE (5)
+    if (endPt.x > minX + width * 0.55 && endPt.y > minY + height * 0.7) {
       return '2';
     }
-    if (endPt.y < minY + height * 0.5 && dy > 0) {
+    if (horizReversals >= 1 && endPt.x < minX + width * 0.5) {
       return '3';
     }
+    if (startPt.x > minX + width * 0.5 && startPt.y < minY + height * 0.3) {
+      return '5';
+    }
 
-    return numStrokes === 1 ? '5' : '8';
+    if (aspectRatio > 1.5) return '1';
+    if (aspectRatio < 0.6) return '-';
+    return '5';
   }
 
   function saveState() {
