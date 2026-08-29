@@ -3,12 +3,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v3';
+  const STORAGE_KEY = 'kartyas_jegyzetlap_data_v4';
 
-  // Calculate default screen-filling round count (cell height ~44px)
   const calculateScreenRoundsCount = () => {
     const availableHeight = window.innerHeight - 100;
-    const rows = Math.max(16, Math.floor(availableHeight / 44));
+    const rows = Math.max(16, Math.floor(availableHeight / 46));
     return rows;
   };
 
@@ -16,11 +15,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let state = loadState() || {
     players: ['Név 1', 'Név 2', 'Név 3', 'Név 4'],
-    showSum: false, // Disabled by default
+    // Array of bunkos per player: e.g. [['sima'], ['szoros', 'sima'], [], []]
+    playerBunkos: [[], [], [], []],
+    showSum: false,
     rounds: Array.from({ length: initialRowCount }, () => ['', '', '', ''])
   };
 
-  // Ensure initial state has enough screen-filling rows
+  // Ensure playerBunkos array matches players length
+  if (!state.playerBunkos || state.playerBunkos.length !== state.players.length) {
+    state.playerBunkos = state.players.map((_, i) => state.playerBunkos?.[i] || []);
+  }
+
   if (state.rounds.length < initialRowCount) {
     while (state.rounds.length < initialRowCount) {
       state.rounds.push(state.players.map(() => ''));
@@ -38,6 +43,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const sumStatusText = document.getElementById('sum-status-text');
   const resetBtn = document.getElementById('reset-btn');
 
+  // Modal Elements
+  const bunkoModalBtn = document.getElementById('bunko-modal-btn');
+  const bunkoModal = document.getElementById('bunko-modal');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const bunkoModalList = document.getElementById('bunko-modal-list');
+
+  // SVG Generators for Sima Bunkó and Szőrös Bunkó
+  const SVG_SIMA_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon sima" title="Sima bunkó"><circle cx="12" cy="12" r="7.5" fill="#1e293b"/></svg>`;
+  const SVG_SZOROS_BUNKO = `<svg viewBox="0 0 24 24" class="bunko-icon szoros" title="Szőrös bunkó"><circle cx="12" cy="12" r="5" fill="#1e293b"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.93 4.93l2.12 2.12M16.95 16.95l2.12 2.12M4.93 19.07l2.12-2.12M16.95 7.05l2.12-2.12" stroke="#1e293b" stroke-width="2.2" stroke-linecap="round"/></svg>`;
+
   // Initialize UI
   renderTable();
 
@@ -46,12 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
   toggleSumBtn.addEventListener('click', toggleSum);
   resetBtn.addEventListener('click', resetGame);
 
+  bunkoModalBtn.addEventListener('click', openBunkoModal);
+  closeModalBtn.addEventListener('click', closeBunkoModal);
+  bunkoModal.addEventListener('click', (e) => {
+    if (e.target === bunkoModal) closeBunkoModal();
+  });
+
   // Keyboard & Input delegates
   roundsTbody.addEventListener('keydown', handleCellKeyDown);
   roundsTbody.addEventListener('input', handleCellInput);
 
   /**
-   * Render complete table based on state
+   * Render complete table
    */
   function renderTable() {
     renderHeaders();
@@ -61,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Render Player Header Row
+   * Render Player Header Row with Bunkó Badges
    */
   function renderHeaders() {
     playerHeadersRow.innerHTML = '';
@@ -74,6 +95,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const innerDiv = document.createElement('div');
       innerDiv.className = 'player-header-inner';
 
+      // Name Input Row
+      const nameRow = document.createElement('div');
+      nameRow.className = 'player-name-row';
+
       const input = document.createElement('input');
       input.type = 'text';
       input.className = 'player-name-input';
@@ -81,18 +106,36 @@ document.addEventListener('DOMContentLoaded', () => {
       input.placeholder = `Játékos ${index + 1}`;
       input.addEventListener('change', (e) => updatePlayerName(index, e.target.value));
 
-      innerDiv.appendChild(input);
+      nameRow.appendChild(input);
 
-      // Remove player button (only if more than 2 players)
       if (state.players.length > 2) {
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-player-btn';
         removeBtn.innerHTML = '✕';
         removeBtn.title = 'Játékos törlése';
-        removeBtn.addEventListener('click', () => removePlayer(index));
-        innerDiv.appendChild(removeBtn);
+        removeBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removePlayer(index);
+        });
+        nameRow.appendChild(removeBtn);
       }
 
+      innerDiv.appendChild(nameRow);
+
+      // Bunkó Badges Row (under name)
+      const badgesRow = document.createElement('div');
+      badgesRow.className = 'player-badges-row';
+      badgesRow.title = 'Kattints ide a Bunkók kezeléséhez!';
+      badgesRow.addEventListener('click', openBunkoModal);
+
+      const bunkos = state.playerBunkos[index] || [];
+      bunkos.forEach(type => {
+        const span = document.createElement('span');
+        span.innerHTML = type === 'szoros' ? SVG_SZOROS_BUNKO : SVG_SIMA_BUNKO;
+        badgesRow.appendChild(span.firstChild);
+      });
+
+      innerDiv.appendChild(badgesRow);
       th.appendChild(innerDiv);
       playerHeadersRow.appendChild(th);
     });
@@ -103,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function renderTotals() {
     totalRow.innerHTML = '';
-
     const totals = calculateTotals();
 
     totals.forEach((sum) => {
@@ -129,9 +171,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Toggle Sum Row
-   */
   function toggleSum() {
     state.showSum = !state.showSum;
     saveState();
@@ -143,16 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function renderRounds() {
     roundsTbody.innerHTML = '';
-
     state.rounds.forEach((roundData, roundIdx) => {
       const tr = createRoundRow(roundIdx, roundData);
       roundsTbody.appendChild(tr);
     });
   }
 
-  /**
-   * Helper to create a single round TR element
-   */
   function createRoundRow(roundIdx, roundData) {
     const tr = document.createElement('tr');
     tr.className = 'round-row';
@@ -163,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
       td.className = 'score-cell';
 
       const input = document.createElement('input');
-      input.type = 'text'; // Using text with inputmode decimal for touch numeric keyboard
+      input.type = 'text';
       input.inputMode = 'decimal';
       input.className = 'score-input';
       input.value = roundData[playerIdx] !== undefined ? roundData[playerIdx] : '';
@@ -178,9 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return tr;
   }
 
-  /**
-   * Handle Score Input Change
-   */
   function handleCellInput(e) {
     if (!e.target.classList.contains('score-input')) return;
 
@@ -200,9 +232,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTotals();
   }
 
-  /**
-   * Handle Keyboard Navigation (Excel-like Enter & Arrow keys)
-   */
   function handleCellKeyDown(e) {
     if (!e.target.classList.contains('score-input')) return;
 
@@ -212,13 +241,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (e.key === 'Enter') {
       e.preventDefault();
-
-      // If we are at the last row, dynamically append a new round row
       if (currentRound === state.rounds.length - 1) {
         appendEmptyRound(false);
       }
-
-      // Move to same player, next round
       focusCell(currentRound + 1, currentPlayer);
     } else if (e.key === 'ArrowDown') {
       if (currentRound < state.rounds.length - 1) {
@@ -243,9 +268,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Helper to set focus to specific grid input cell
-   */
   function focusCell(roundIdx, playerIdx) {
     const targetInput = roundsTbody.querySelector(
       `input[data-round-index="${roundIdx}"][data-player-index="${playerIdx}"]`
@@ -256,14 +278,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Calculate Total Scores per Player
-   */
   function calculateTotals() {
     return state.players.map((_, playerIdx) => {
       let sum = 0;
       let hasValue = false;
-
       state.rounds.forEach(round => {
         const val = round[playerIdx];
         if (val !== '' && val !== null && val !== undefined && !isNaN(Number(val))) {
@@ -271,78 +289,150 @@ document.addEventListener('DOMContentLoaded', () => {
           hasValue = true;
         }
       });
-
       return hasValue ? sum : 0;
     });
   }
 
-  /**
-   * Add New Player Column
-   */
   function addPlayer() {
     const newPlayerName = `Név ${state.players.length + 1}`;
     state.players.push(newPlayerName);
-    
+    state.playerBunkos.push([]);
     state.rounds.forEach(round => round.push(''));
-
     saveState();
     renderTable();
   }
 
-  /**
-   * Remove Player Column
-   */
   function removePlayer(playerIdx) {
     if (state.players.length <= 2) return;
-
     state.players.splice(playerIdx, 1);
+    state.playerBunkos.splice(playerIdx, 1);
     state.rounds.forEach(round => round.splice(playerIdx, 1));
-
     saveState();
     renderTable();
   }
 
-  /**
-   * Update Player Name
-   */
   function updatePlayerName(playerIdx, newName) {
     state.players[playerIdx] = newName.trim() || `Játékos ${playerIdx + 1}`;
     saveState();
   }
 
-  /**
-   * Append Single Empty Round
-   */
   function appendEmptyRound(shouldFocus = true) {
     const emptyRound = state.players.map(() => '');
     state.rounds.push(emptyRound);
-    
     const newRoundIndex = state.rounds.length - 1;
     const tr = createRoundRow(newRoundIndex, emptyRound);
     roundsTbody.appendChild(tr);
-
     saveState();
-
     if (shouldFocus) {
       focusCell(newRoundIndex, 0);
     }
   }
 
   /**
-   * Reset Game (Clear all scores)
+   * Bunkó Modal Management
    */
+  function openBunkoModal() {
+    renderBunkoModalList();
+    bunkoModal.classList.remove('is-hidden');
+  }
+
+  function closeBunkoModal() {
+    bunkoModal.classList.add('is-hidden');
+  }
+
+  function renderBunkoModalList() {
+    bunkoModalList.innerHTML = '';
+
+    state.players.forEach((name, playerIdx) => {
+      const row = document.createElement('div');
+      row.className = 'modal-player-row';
+
+      const infoDiv = document.createElement('div');
+      infoDiv.className = 'modal-player-info';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'modal-player-name';
+      nameSpan.textContent = name;
+
+      const badgesDiv = document.createElement('div');
+      badgesDiv.className = 'modal-player-badges';
+
+      const bunkos = state.playerBunkos[playerIdx] || [];
+      bunkos.forEach(type => {
+        const span = document.createElement('span');
+        span.innerHTML = type === 'szoros' ? SVG_SZOROS_BUNKO : SVG_SIMA_BUNKO;
+        badgesDiv.appendChild(span.firstChild);
+      });
+
+      infoDiv.appendChild(nameSpan);
+      infoDiv.appendChild(badgesDiv);
+
+      // Actions Row
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'modal-actions-row';
+
+      const addSimaBtn = document.createElement('button');
+      addSimaBtn.className = 'btn-bunko-add';
+      addSimaBtn.innerHTML = `${SVG_SIMA_BUNKO} + Sima Bunkó`;
+      addSimaBtn.addEventListener('click', () => {
+        addBunko(playerIdx, 'sima');
+      });
+
+      const addSzorosBtn = document.createElement('button');
+      addSzorosBtn.className = 'btn-bunko-add';
+      addSzorosBtn.innerHTML = `${SVG_SZOROS_BUNKO} + Szőrös Bunkó`;
+      addSzorosBtn.addEventListener('click', () => {
+        addBunko(playerIdx, 'szoros');
+      });
+
+      actionsDiv.appendChild(addSimaBtn);
+      actionsDiv.appendChild(addSzorosBtn);
+
+      if (bunkos.length > 0) {
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'btn-bunko-remove';
+        removeBtn.textContent = '✕ Törlés (-1)';
+        removeBtn.addEventListener('click', () => {
+          removeBunko(playerIdx);
+        });
+        actionsDiv.appendChild(removeBtn);
+      }
+
+      row.appendChild(infoDiv);
+      row.appendChild(actionsDiv);
+      bunkoModalList.appendChild(row);
+    });
+  }
+
+  function addBunko(playerIdx, type) {
+    if (!state.playerBunkos[playerIdx]) {
+      state.playerBunkos[playerIdx] = [];
+    }
+    state.playerBunkos[playerIdx].push(type);
+    saveState();
+    renderHeaders();
+    renderBunkoModalList();
+  }
+
+  function removeBunko(playerIdx) {
+    if (state.playerBunkos[playerIdx] && state.playerBunkos[playerIdx].length > 0) {
+      state.playerBunkos[playerIdx].pop();
+      saveState();
+      renderHeaders();
+      renderBunkoModalList();
+    }
+  }
+
   function resetGame() {
-    if (confirm('Biztosan törölni szeretnéd az összes rögzített pontot?')) {
+    if (confirm('Biztosan törölni szeretnéd az összes rögzített pontot és bunkót?')) {
       const rowCount = calculateScreenRoundsCount();
       state.rounds = Array.from({ length: rowCount }, () => state.players.map(() => ''));
+      state.playerBunkos = state.players.map(() => []);
       saveState();
       renderTable();
     }
   }
 
-  /**
-   * Save State to LocalStorage
-   */
   function saveState() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -351,9 +441,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /**
-   * Load State from LocalStorage
-   */
   function loadState() {
     try {
       const data = localStorage.getItem(STORAGE_KEY);

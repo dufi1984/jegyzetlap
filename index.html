@@ -48,13 +48,29 @@
     <button id="add-player-btn" class="btn-subtle">
       👤 Új játékos
     </button>
+    <button id="bunko-modal-btn" class="btn-subtle">
+      ⚫ Bunkók
+    </button>
     <button id="toggle-sum-btn" class="btn-subtle">
-      Σ Összesítés: <span id="sum-status-text">KI</span>
+      Σ Szumma: <span id="sum-status-text">KI</span>
     </button>
     <button id="reset-btn" class="btn-subtle btn-reset">
       🔄 Új játék
     </button>
   </footer>
+
+  <!-- Bunkó / Penalty Manager Modal -->
+  <div id="bunko-modal" class="modal-overlay is-hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>⚫ Bunkók Kezelése</h2>
+        <button id="close-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body" id="bunko-modal-list">
+        <!-- Dynamically populated player list with bunko controls -->
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
